@@ -1,0 +1,1 @@
+- Data: divided into two categories, raw data and processed data.
