@@ -3,7 +3,7 @@ record the Input and Output of Interfaces
 
 # NNLM_predict_N_word
 功能：
-    使用NNLM模型，利用前N-1个word预测第N个word
+    使用NNLM模型，利用前N-1个word预测第N个word  
 输入（可调整的参数）：
     [1]词库大小(n_class)     
     [2]转化的词向量大小(m)        
