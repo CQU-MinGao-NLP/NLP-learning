@@ -6,7 +6,7 @@ Member: Wangzongwei;[@Shuai Zhang](https://github.com/1102173230); Wangjia;
 our email:
 Wangzongwei zongwei@cqu.edu.cn  
 zhuangshuai （添加一下自己的邮箱）  
-wangjia （添加一下自己的邮箱）
+wangjia jjia@cqu.edu.cn
 
 # 代码添加逻辑
 下面以NNLM预测第N个word功能为例：
