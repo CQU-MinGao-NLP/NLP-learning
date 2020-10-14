@@ -12,7 +12,7 @@ def start():
     print('*'*80)
     print('Here is Help more people, natural language process (HMP-NLP)')
     print('This system has two ways to operate, we automatically use the system way, if you would like to use it by yourself, please contact us accordding to ReadMe')
-    print('Members: Wang zongwei, Zhang Shuai, Wangzong')
+    print('Members: Wang zongwei, Zhang Shuai, Wang Jia')
     print('Mentor: Gao Min')
     print('Organization: Chongqing University')
 
