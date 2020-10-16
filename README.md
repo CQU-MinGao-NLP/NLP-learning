@@ -5,7 +5,7 @@ Member: Wangzongwei;[@Shuai Zhang](https://github.com/1102173230); Wangjia;
 
 our email:
 Wangzongwei zongwei@cqu.edu.cn  
-zhuangshuai （添加一下自己的邮箱）  
+ZhuangShuai zhangshuai@cqu.edu.cn  
 wangjia jjia@cqu.edu.cn
 
 # 代码添加逻辑
