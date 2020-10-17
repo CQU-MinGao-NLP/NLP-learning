@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy
 from Interface.NNLM_predict_next_word import NNLM_predict_N_word
+from Interface.textCNN_classify import textCNN_classify
 
 # 开始界面
 def start():
@@ -21,7 +22,7 @@ def choose():
     print('*'*80)
     print('There are some basic models to choose, please choose one')
     print('(example: if you input 1 with <enter>, you will run NNLM)')
-    print('1. NNLM_predict_next_word(sample)')
+    print('1. NNLM_predict_next_word(sample)    2. textCNN_classify')
     print('*'*80)
     number = int(input())
     return number
@@ -36,6 +37,9 @@ if __name__ == '__main__':
     number = choose()
     if number == 1:
         test = NNLM_predict_N_word()
+        test.process()
+    elif number == 2:
+        test = textCNN_classify()
         test.process()
     else:
         pass
