@@ -8,6 +8,8 @@ import numpy
 from Interface.NNLM_predict_next_word import NNLM_predict_N_word
 from Interface.textCNN_classify import textCNN_classify
 from Interface.transformer_translate import transformer_translate
+from Interface.textRNN_classify import textRNN_classify
+from Interface.word2vec import word2vec
 
 # 开始界面
 def start():
@@ -44,6 +46,12 @@ if __name__ == '__main__':
         test.process()
     elif number == 3:
         test = transformer_translate()
+        test.process()
+    elif number == 4:
+        test = textRNN_classify()
+        test.process()
+    elif number == 5:
+        test = word2vec()
         test.process()
     else:
         pass
