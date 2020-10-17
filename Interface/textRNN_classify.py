@@ -185,11 +185,12 @@ class textRNN_classify(Interface.Interface):
     def test(self):
         if self.just_test == True:
             self.textRNN_model.load_state_dict(torch.load(DATA_ROOT+'/model/textRNN_model.pkl'))
-        test_text = 'i sorry that i hate you'
-        tests = [np.asarray([self.word_dict[n] for n in test_text.split()])]
-        test_batch = torch.LongTensor(tests)
-        predict = self.textRNN_model(test_batch).data.max(1, keepdim=True)[1]
-        if predict[0][0] == 0:
-            print(test_text,"is Bad Mean...")
-        else:
-            print(test_text,"is Good Mean!!")
+        def predict_sentiment(net, vocab, sentence):
+            """sentence是词语的列表"""
+            device = list(net.parameters())[0].device
+            sentence = torch.tensor([vocab.stoi[word] for word in sentence], device=device)
+            label = torch.argmax(net(sentence.view((1, -1))), dim=1)
+            return 'positive' if label.item() == 1 else 'negative'
+
+        print(predict_sentiment(self.textRNN_model, self.vocab, ['this', 'movie', 'is', 'so', 'great'])) # positive
+        print(predict_sentiment(self.textRNN_model, self.vocab, ['this', 'movie', 'is', 'so', 'bad'])) # negative

@@ -19,10 +19,10 @@ sys.path.append("..")
     [2]max_window_size = 5 # 最大窗口长度
     [3]just_test = False # 是否只用于预测
 '''
-
+DATA_ROOT = "../Data"
 class word2vec(Interface.Interface):
     def __init__(self, input_data=["i love you and like you", "he loves me and like you", "she likes baseball and like you", "i hate you and hate he", "sorry for that i hate you", "this is awful and hate you"],\
-                 input_labels = [1, 1, 1, 0, 0, 0], embedding_size=100, sequence_length=500, num_classes=2, num_layers=2, num_hiddens = 100, just_test=False):
+                 input_labels = [1, 1, 1, 0, 0, 0], embedding_size=100, just_test=False):
         #super(Interface, self).__init__()
         self.input_data = input_data
         self.input_labels = input_labels
@@ -30,6 +30,7 @@ class word2vec(Interface.Interface):
         self.learning_rate = 0.01
         self.num_epochs = 10
         self.batch_size = 512
+        self.max_window_size = 5
         self.just_test = just_test
 
     # 控制流程
@@ -200,4 +201,4 @@ class word2vec(Interface.Interface):
             for i in topk[1:]:
                 print('cosine sim=%.3f: %s' % (cos[i], (self.idx_to_token[i])))
 
-        get_similar_tokens('chip', 3, word2vec_net[0])
+        get_similar_tokens('chip', 3, self.word2vec_net[0])
