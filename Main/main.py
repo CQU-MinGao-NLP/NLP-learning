@@ -26,6 +26,7 @@ def choose():
     print('There are some basic models to choose, please choose one')
     print('(example: if you input 1 with <enter>, you will run NNLM)')
     print('1. NNLM_predict_next_word(sample)    2. textCNN_classify    3. transformer_translate')
+    print('4. textRNN_classify      5. word2vec      6. ELMo')
     print('*'*80)
     number = int(input())
     return number
