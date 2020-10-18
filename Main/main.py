@@ -10,6 +10,9 @@ from Interface.textCNN_classify import textCNN_classify
 from Interface.transformer_translate import transformer_translate
 from Interface.textRNN_classify import textRNN_classify
 from Interface.word2vec import word2vec
+from Interface.FastText_classify_text import FastText_classify_text
+from Interface.Seq2seq_translate_text import Seq2seq_translate_text
+from Interface.Bert_premodel_for_NLP import Bert_premodel_for_NLP
 
 # 开始界面
 def start():
@@ -25,8 +28,9 @@ def choose():
     print('*'*80)
     print('There are some basic models to choose, please choose one')
     print('(example: if you input 1 with <enter>, you will run NNLM)')
-    print('1. NNLM_predict_next_word(sample)    2. textCNN_classify    3. transformer_translate')
-    print('4. textRNN_classify      5. word2vec      6. ELMo')
+    print('1. NNLM_predict_next_word(sample)    2. textCNN_classify           3. transformer_translate')
+    print('4. textRNN_classify                  5. word2vec                   6. ELMo')
+    print('7. FastText_classify_text            8. Seq2seq_translate_text     9. Bert_premodel_for_NLP')
     print('*'*80)
     number = int(input())
     return number
@@ -53,6 +57,15 @@ if __name__ == '__main__':
         test.process()
     elif number == 5:
         test = word2vec()
+        test.process()
+    elif number == 7:
+        test = FastText_classify_text()
+        test.process()
+    elif number == 8:
+        test = Seq2seq_translate_text()
+        test.process()
+    elif number == 9:
+        test = Bert_premodel_for_NLP()
         test.process()
     else:
         pass
