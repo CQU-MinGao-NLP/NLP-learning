@@ -10,23 +10,17 @@ from Logistic.model.Bert import Bert
 功能：
     使用Bert模型，进行完形填空以及预测下一句任务
 输入（可调整的参数）：
-    [1]INPUT_DIM = len(en2id)
-    [2]OUTPUT_DIM = len(ch2id)
-    # 超参数
-    [3]BATCH_SIZE = 32
-    [4]ENC_EMB_DIM = 256
-    [5]DEC_EMB_DIM = 256
-    [6]HID_DIM = 512
-    [7]N_LAYERS = 2
-    [8]ENC_DROPOUT = 0.5
-    [9]DEC_DROPOUT = 0.5
-    [10LEARNING_RATE = 1e-4
-    [11]N_EPOCHS = 20
-    [12]CLIP = 1
-    [13]bidirectional = True
-    [14]attn_method = "general"
-    [15]seed = 2020
-    [16]input_data = '../datasets/cmn-eng/cmn-1.txt'
+    [1] maxlen 表示同一个 batch 中的所有句子都由 30 个 token 组成，不够的补 PAD（这里实现的方式比较粗暴，直接固定所有 batch 中的所有句子都为 30）
+    [2] batch_size 表示batch大小
+    [3] max_pred 表示最多需要预测多少个单词，即 BERT 中的完形填空任务
+    [4] n_layers 表示 Encoder Layer 的数量
+    [5] n_heads 表示多头注意力机制个数
+    [6] d_model 表示 Token Embeddings、Segment Embeddings、Position Embeddings 的维度
+    [7] d_ff 表示 Encoder Layer 中全连接层的维度
+    [8] d_k 表示K和Q的维度
+    [9] d_v 表示V的维度
+    [10] n_segments 表示 Decoder input 由几句话组成
+    [11] input 表示输入数据集，一段连续文本
 输出：
     针对随机抽取的两个句子预测出mask的词语，并判断第二句是否为第一句的后一句
 '''
