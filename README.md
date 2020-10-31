@@ -1,5 +1,5 @@
 # NLP-learning
-This is a NLP project.
+This is a NLP project.  
 Mentor:   
 [@Min Gao](http://www.cse.cqu.edu.cn/info/2096/3497.htm)  
 Member:   
