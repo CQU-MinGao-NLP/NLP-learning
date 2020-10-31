@@ -10,8 +10,8 @@ from Interface.textCNN_classify import textCNN_classify
 from Interface.transformer_translate import transformer_translate
 from Interface.textRNN_classify import textRNN_classify
 from Interface.word2vec import word2vec
-from Interface.FastText_classify_text import FastText_classify_text
-from Interface.Seq2seq_translate_text import Seq2seq_translate_text
+#from Interface.FastText_classify_text import FastText_classify_text
+#from Interface.Seq2seq_translate_text import Seq2seq_translate_text
 from Interface.Bert_premodel_for_NLP import Bert_premodel_for_NLP
 
 # 开始界面
@@ -32,7 +32,11 @@ def choose():
     print('4. textRNN_classify                  5. word2vec                   6. ELMo')
     print('7. FastText_classify_text            8. Seq2seq_translate_text     9. Bert_premodel_for_NLP')
     print('*'*80)
-    number = int(input())
+    try:
+        number = int(input())
+    except KeyError:
+        print("Error num!")
+        exit(-1)
     return number
 
 # 结束界面
@@ -40,33 +44,41 @@ def end():
     print('*'*80)
     print('It is the ending! If you would like to use it again, please run again~')
     print('*'*80)
+
 if __name__ == '__main__':
     start()
-    number = choose()
-    if number == 1:
-        test = NNLM_predict_N_word()
+    while True:
+        number = choose()
+        if number == 1:
+            test = NNLM_predict_N_word()
+        elif number == 2:
+            test = textCNN_classify()
+        elif number == 3:
+            test = transformer_translate()
+        elif number == 4:
+            test = textRNN_classify()
+        elif number == 5:
+            test = word2vec()
+        elif number == 7:
+            test = FastText_classify_text()
+        elif number == 8:
+            test = Seq2seq_translate_text()
+        elif number == 9:
+            test = Bert_premodel_for_NLP()
+        else:
+            pass
         test.process()
-    elif number == 2:
-        test = textCNN_classify()
-        test.process()
-    elif number == 3:
-        test = transformer_translate()
-        test.process()
-    elif number == 4:
-        test = textRNN_classify()
-        test.process()
-    elif number == 5:
-        test = word2vec()
-        test.process()
-    elif number == 7:
-        test = FastText_classify_text()
-        test.process()
-    elif number == 8:
-        test = Seq2seq_translate_text()
-        test.process()
-    elif number == 9:
-        test = Bert_premodel_for_NLP()
-        test.process()
-    else:
-        pass
+        print("the process of this opration is over, do you want exit our system? (yes/no)")
+        try:
+            input_end_looper = str(input())
+        except KeyError:
+            print("Error input!")
+            exit(-1)
+        if input_end_looper == 'yes':
+            break
+        elif input_end_looper == 'no':
+            pass
+        else:
+            print("Error input")
+            exit(-1)
     end()
