@@ -1,12 +1,13 @@
 # NLP-learning
 This is a NLP project.
-Mentor: Min Gao
-Member: [@Shuai Zhang](https://github.com/1102173230); [@Wangzongwei](https://github.com/CoderWZW); [@Wangjia](https://github.com/JJia000);
+Mentor: [@Min Gao](http://www.cse.cqu.edu.cn/info/2096/3497.htm)
+Member:   
+[@Shuai Zhang](https://github.com/1102173230);  [@Zongwei Wang](https://github.com/CoderWZW); [@Jia Wang](https://github.com/JJia000);
 
 our email:  
-ZhuangShuai zhangshuai@cqu.edu.cn  
-Wangzongwei zongwei@cqu.edu.cn  
-wangjia jjia@cqu.edu.cn
+Shuai Zhang zhangshuai@cqu.edu.cn  
+Zongwei Wang zongwei@cqu.edu.cn  
+Jia Wang jjia@cqu.edu.cn
 
 # 代码添加逻辑
 下面以NNLM预测第N个word功能为例：
