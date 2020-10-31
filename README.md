@@ -1,7 +1,7 @@
 # NLP-learning
 This is a NLP project.
 Mentor: Min Gao
-Member: [@Shuai Zhang](https://github.com/1102173230);[Wangzongwei](https://github.com/CoderWZW); Wangjia;
+Member: [@Shuai Zhang](https://github.com/1102173230);[@Wangzongwei](https://github.com/CoderWZW); Wangjia;
 
 our email:
 Wangzongwei zongwei@cqu.edu.cn  
