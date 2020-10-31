@@ -3,9 +3,9 @@ This is a NLP project.
 Mentor: Min Gao
 Member: [@Shuai Zhang](https://github.com/1102173230); [@Wangzongwei](https://github.com/CoderWZW); [@Wangjia](https://github.com/JJia000);
 
-our email:
-Wangzongwei zongwei@cqu.edu.cn  
+our email:  
 ZhuangShuai zhangshuai@cqu.edu.cn  
+Wangzongwei zongwei@cqu.edu.cn  
 wangjia jjia@cqu.edu.cn
 
 # 代码添加逻辑
