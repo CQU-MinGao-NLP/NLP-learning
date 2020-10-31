@@ -23,6 +23,21 @@ def start():
     print('Mentor: Gao Min')
     print('Organization: Chongqing University')
 
+# 选择所需系统功能
+def choose_system():
+    print('*'*80)
+    print('Our system are seperated into three parts:')
+    print(' 1. Data Process (this part)')
+    print(' 2. Use Trained Model to Predict (Simple way) (this part)')
+    print(' 3. Train Model by Yourself (Professional way) (this part)')
+    print('Which part do you want to enter?')
+    try:
+        input_system = int(input())
+    except KeyError:
+        print("Error input")
+        exit(-1)
+    return input_system
+
 # 选择所需的接口
 def choose():
     print('*'*80)
@@ -48,26 +63,36 @@ def end():
 if __name__ == '__main__':
     start()
     while True:
-        number = choose()
-        if number == 1:
-            test = NNLM_predict_N_word()
-        elif number == 2:
-            test = textCNN_classify()
-        elif number == 3:
-            test = transformer_translate()
-        elif number == 4:
-            test = textRNN_classify()
-        elif number == 5:
-            test = word2vec()
-        elif number == 7:
-            test = FastText_classify_text()
-        elif number == 8:
-            test = Seq2seq_translate_text()
-        elif number == 9:
-            test = Bert_premodel_for_NLP()
+        system_number = choose_system()
+        if system_number == 1:
+            print("Enter Data Process")
+
+        elif system_number == 2:
+            print("Enter P2")
+        elif system_number == 3:
+            number = choose()
+            if number == 1:
+                test = NNLM_predict_N_word()
+            elif number == 2:
+                test = textCNN_classify()
+            elif number == 3:
+                test = transformer_translate()
+            elif number == 4:
+                test = textRNN_classify()
+            elif number == 5:
+                test = word2vec()
+            elif number == 7:
+                test = FastText_classify_text()
+            elif number == 8:
+                test = Seq2seq_translate_text()
+            elif number == 9:
+                test = Bert_premodel_for_NLP()
+            else:
+                pass
+            test.process()
         else:
-            pass
-        test.process()
+            print("wrong input")
+            print('*'*80)
         print("the process of this opration is over, do you want exit our system? (yes/no)")
         try:
             input_end_looper = str(input())
