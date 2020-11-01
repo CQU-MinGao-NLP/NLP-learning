@@ -5,10 +5,20 @@ Mentor:
 Member:   
 [@Shuai Zhang](https://github.com/1102173230);  [@Zongwei Wang](https://github.com/CoderWZW); [@Jia Wang](https://github.com/JJia000);
 
-our email:  
+Our email:  
 Shuai Zhang zhangshuai@cqu.edu.cn  
 Zongwei Wang zongwei@cqu.edu.cn  
 Jia Wang jjia@cqu.edu.cn
+
+# 操作说明
+1. 进入Main 
+2. 执行代码python main.py
+3. 选择所需系统（数据处理系统；模型训练系统（专业推荐，自己得到模型参数）；模型测试系统（非专业推荐, 使用已有模型参数））
+a. 数据处理系统
+b. 模型训练系统
+选择所需模型接口 -> 修改模型参数 -> 训练模型参数及保存 
+c. 模型测试系统
+选择数据集 -> 选择训练模型参数 -> 得出所需结果
 
 # 代码添加逻辑
 下面以NNLM预测第N个word功能为例：
@@ -23,7 +33,3 @@ b. 在Readme中添加接口信息
 4. 在Main中增加choose选项
 
 注意：因为example比较简单，有些板块没有涉及到，可以自己尝试加在其他模块，如果有些地方不知道怎么添加在飞书中联系。
-
-# 操作说明
-进入Main, 执行代码  
-python main.py
