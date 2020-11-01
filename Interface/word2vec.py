@@ -9,7 +9,10 @@ import torch
 from torch import nn
 import torch.utils.data as Data
 from Interface import Interface
-sys.path.append("..") 
+from Logistic.dataprocess import Data_process
+from Logistic.dataprocess.Data_process import dict_save
+
+sys.path.append("..")
 
 '''
 功能：  
@@ -19,30 +22,30 @@ sys.path.append("..")
     [2]max_window_size = 5 # 最大窗口长度
     [3]just_test = False # 是否只用于预测
 '''
-DATA_ROOT = "../Data"
+MODEL_ROOT = "../Data/model/word2vec/"
+DATA_ROOT = "../Data/train_data/"
+
 class word2vec(Interface.Interface):
-    def __init__(self, input_data=["i love you and like you", "he loves me and like you", "she likes baseball and like you", "i hate you and hate he", "sorry for that i hate you", "this is awful and hate you"],\
-                 input_labels = [1, 1, 1, 0, 0, 0], embedding_size=100, just_test=False):
+    def __init__(self, filename, embedding_size=100, learning_rate = 0.01, num_epochs = 10, batch_size = 512, max_window_size = 5):
         #super(Interface, self).__init__()
-        self.input_data = input_data
-        self.input_labels = input_labels
+        self.filename = filename
+        self.input_data = []
+        self.input_labels = []
         self.embedding_size = embedding_size
         self.learning_rate = 0.01
         self.num_epochs = 10
         self.batch_size = 512
         self.max_window_size = 5
-        self.just_test = just_test
 
     # 控制流程
     def process(self):
         self.data_process()
         self.make_batch()
         self.model()
-        if self.just_test == False:
-            self.optimization()
-            self.train()
+        self.optimization()
+        self.train()
         #self.predict()
-        self.test()
+        #self.test()
 
     def make_batch(self):
         class MyDataset(torch.utils.data.Dataset):
@@ -81,17 +84,25 @@ class word2vec(Interface.Interface):
                                     num_workers=num_workers)
 
     def data_process(self):
-        assert 'ptb.train.txt' in os.listdir("../Data/ptb")
+        # attention
+        assert self.filename in os.listdir(DATA_ROOT)
 
-        with open('../Data/ptb/ptb.train.txt', 'r') as f:
+        with open(DATA_ROOT+self.filename, 'r') as f:
             lines = f.readlines()
             raw_dataset = [st.split() for st in lines]
 
-        counter = collections.Counter([tk for st in raw_dataset for tk in st])
-        counter = dict(filter(lambda x: x[1] >= 5, counter.items()))
+        counter = Data_process.highfrequency(raw_dataset, 5)[0]
 
+        # counter = collections.Counter([tk for st in raw_dataset for tk in st])
+        # counter = dict(filter(lambda x: x[1] >= 5, counter.items()))
+
+        # ！！！！！！！！！！！！！！！
         self.idx_to_token = [tk for tk, _ in counter.items()]
         self.token_to_idx = {tk: idx for idx, tk in enumerate(self.idx_to_token)}
+        dict_save(dict(zip(list(range(len(self.idx_to_token))), self.idx_to_token)), MODEL_ROOT + "word2vec_idx2token.txt")
+        dict_save(self.token_to_idx, MODEL_ROOT + "word2vec_token2idx.txt")
+
+
         dataset = [[self.token_to_idx[tk] for tk in st if tk in self.token_to_idx]
                 for st in raw_dataset]
         num_tokens = sum([len(st) for st in dataset])
@@ -185,13 +196,13 @@ class word2vec(Interface.Interface):
             print('epoch %d, loss %.2f, time %.2fs'
                 % (epoch + 1, l_sum / n, time.time() - start))
 
-        torch.save(self.word2vec_net, DATA_ROOT+'/model/word2vec_net.pkl')
+        torch.save(self.word2vec_net, MODEL_ROOT+'word2vec.pkl')
+
     def predict(self):
         pass
     
     def test(self):
-        if self.just_test == True:
-            self.word2vec_net.load_state_dict(torch.load(DATA_ROOT+'/model/word2vec_net.pkl'))
+        self.word2vec_net.load_state_dict(torch.load(MODEL_ROOT+'word2vec.pkl'))
         def get_similar_tokens(query_token, k, embed):
             W = embed.weight.data
             x = W[self.token_to_idx[query_token]]

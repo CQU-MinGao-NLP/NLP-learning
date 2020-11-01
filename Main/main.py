@@ -1,5 +1,8 @@
 import sys
-sys.path.append("..") 
+
+from Interface.model_test import Model_test
+
+sys.path.append("..")
 
 import torch
 import torch.nn as nn
@@ -68,7 +71,19 @@ if __name__ == '__main__':
             print("Enter Data Process")
 
         elif system_number == 2:
-            print("Enter P2")
+            print("please input the type of task:")
+            print("1: embedding    2: classify")
+            number = int(input())
+            if number == 1:
+                print("please input model id:")
+                print("1: word2vec")
+                number = int(input())
+                if number == 1:
+                    file = input('please input the filename\n')
+                    model = Model_test(1, 1, filename=file)
+                    model.process()
+
+
         elif system_number == 3:
             number = choose()
             if number == 1:
@@ -80,7 +95,8 @@ if __name__ == '__main__':
             elif number == 4:
                 test = textRNN_classify()
             elif number == 5:
-                test = word2vec()
+                file = input('plese input the filename\n')
+                test = word2vec(filename=file)
             elif number == 7:
                 test = FastText_classify_text()
             elif number == 8:
