@@ -231,8 +231,8 @@ Function:
 Input: 
     1. a list of sentence, and each element is a sentence
     (e.g. ["I love China!","We are family!"])
-    1. a path of file
-    2. encoding
+    2. a path of file
+    3. encoding
 Output: 
     a file that store data
 '''
