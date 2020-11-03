@@ -31,6 +31,7 @@ def test(text):
         x = W[int(token_to_idx[query_token])]
         return x
 
+    print("The embedding of words will be save in " + RESULT_ROOT + "word_embedding.txt")
     cnt = 0
     with open(RESULT_ROOT + "word_embedding.txt", 'w', encoding='UTF-8') as f:
         pbar = tqdm(total=len(words))
