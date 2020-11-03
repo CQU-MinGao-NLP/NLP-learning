@@ -1,7 +1,5 @@
 import sys
 
-from Interface.model_test import Model_test
-
 sys.path.append("..")
 
 import torch
@@ -13,9 +11,11 @@ from Interface.textCNN_classify import textCNN_classify
 from Interface.transformer_translate import transformer_translate
 from Interface.textRNN_classify import textRNN_classify
 from Interface.word2vec import word2vec
+from Interface.model_test import Model_test
 #from Interface.FastText_classify_text import FastText_classify_text
 #from Interface.Seq2seq_translate_text import Seq2seq_translate_text
 from Interface.Bert_premodel_for_NLP import Bert_premodel_for_NLP
+from Interface.Data_process_controler import Data_process_controler
 
 # 开始界面
 def start():
@@ -40,6 +40,20 @@ def choose_system():
         print("Error input")
         exit(-1)
     return input_system
+
+def data_process():
+    print('*'*80)
+    print("Enter Data Process System!")
+    print("please choose your operation: (the number of operation)")
+    print("1. en_tokenizer  2. cn_tokenizer     3. en_stopwords")
+    print("4. cn_stopwords  5. lowfrequency     6. highfrequency")
+    print("7. filter_lowfrequency  8. filter_html     9. stemming")
+    enter_num = int(input())
+    print("please print the filename you want to process: (example: sample.txt)")
+    filename = str(input())
+    controler = Data_process_controler(filename, enter_num)
+    controler.process()
+    print('*'*80)
 
 # 选择所需的接口
 def choose():
@@ -68,9 +82,10 @@ if __name__ == '__main__':
     while True:
         system_number = choose_system()
         if system_number == 1:
-            print("Enter Data Process")
+            data_process()
 
         elif system_number == 2:
+            print("Use Trained Model to Predict!")
             print("please input the type of task:")
             print("1: embedding    2: classify")
             number = int(input())
