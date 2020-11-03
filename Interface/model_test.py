@@ -23,10 +23,12 @@ class Model_test(object):
 
 
     def load_data(self):
+        print("Start loading data...")
         self.text = Data_process.read_file(DATA_ROOT + self.filename)
 
 
     def model_test(self):
+        print("Start testing model...")
         word2vec_evaluation.test(self.text)
 
 # task = Model_test(1,1)
