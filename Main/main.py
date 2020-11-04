@@ -41,7 +41,7 @@ def loop_legal(input_ori, type, max = 9, path = ""):
             print("[ERROR] this option does not exist!, please re-enter  (example : 1) :")
             input_now = input()
             if input_legal(input_now, type) == True:
-                if int(input_now) > max:
+                if (int(input_now) > max or int(input_now) <=int(0)):
                     continue
                 else:
                     input_ori = input_now
