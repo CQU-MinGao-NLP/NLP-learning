@@ -35,6 +35,7 @@ class textCNN_classify(Interface.Interface):
     # 控制流程
     def process(self):
         self.data_process()
+        self.update_parameters()
         #self.make_batch(self.input_data)
         self.model()
         self.optimization()
@@ -42,6 +43,55 @@ class textCNN_classify(Interface.Interface):
         #self.predict()
         self.test()
     
+    def update_parameters(self):
+        self.parameters_name_list = ['embedding_size', 'sequence_length', 'num_classes', 'filter_sizes','num_filters']
+        self.parameters_list = [self.embedding_size, self.sequence_length, self.num_classes, self.filter_sizes, self.num_filters]
+        parameters_int_list = ['embedding_size', 'sequence_length', 'num_classes', 'filter_sizes','num_filters'] # 输入为int
+        parameters_float_list = [] # 输入为float
+        parameters_list_list = ['filter_sizes'] # 输入为list
+
+        while 1:
+            print("Model parameters are:")
+            for i in range(len(self.parameters_list)):
+                print("[{}] {}={}".format(i, str(self.parameters_name_list[i]), self.parameters_list[i]))
+            print("Do you want change model parameters?(yes/no)")
+            try:
+                input_choose = str(input())
+            except KeyError:
+                    print("Error num!")
+                    exit(-1)
+            if input_choose == 'yes':
+                print('choose parameter you want, give the number of parameter')
+                try:
+                    input_number = int(input())
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                print("your choose {}, print the number you want change".format(self.parameters_name_list[input_number]))
+                try:
+                    while True:
+                        parameter = input()
+                        if self.parameters_name_list[input_number] in parameters_int_list:
+                            parameter = int(parameter)
+                            break
+                        elif self.parameters_name_list[input_number] in parameters_float_list:
+                            parameter = float(parameter)
+                            break
+                        elif self.parameters_name_list[input_number] in parameters_list_list:
+                            parameter = list(str(parameter).split(','))
+                        else:
+                            print("Error input, your input format is wrong!")   
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                self.parameters_list[input_number] = parameter
+                print("update success!")
+            elif input_choose == 'no':
+                break
+            else:
+                print("wrong input, please input again！")
+                pass
+            
     # 将数据分为前N-1个词（input_batch）和所需预测的第N个词（target_batch）
     def make_batch(self, input_data):
         self.input_batch = []
