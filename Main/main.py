@@ -29,10 +29,8 @@ def loop_legal(input_ori, type, max = 9, path = ""):
             print("[ERROR] Your input format is incorrect, please re-enter (example : sample.txt) :")
         input_now = input()
         if input_legal(input_now, type) == True:
-            if type == 1:
-                break
-            elif type == 2:
-                break
+            input_ori = input_now
+            break
         else:
             continue
     # 判断是否有该选项
@@ -115,8 +113,7 @@ def data_process(rawdata_root):
     print("7. filter_lowfrequency  8. filter_html     9. stemming")
     enter_num = loop_legal(input(), 1, max=9)
     print("please print the filename you want to process: (example: sample.txt)")
-    filename = input()
-    filename = loop_legal(filename, 2, path=rawdata_root)
+    filename = loop_legal(input(), 2, path=rawdata_root)
     controler = Data_process_controler(filename, enter_num)
     controler.process()
     print('*'*80)
