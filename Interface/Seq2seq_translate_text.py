@@ -79,6 +79,55 @@ class Seq2seq_translate_text(Interface.Interface):
         self.train()
         self.predict()
 
+def update_parameters(self):
+        self.parameters_name_list = ['BATCH_SIZE', 'ENC_EMB_DIM', 'DEC_EMB_DIM', 'HID_DIM','N_LAYERS','ENC_DROPOUT','DEC_DROPOUT','LEARNING_RATE','N_EPOCHS','CLIP']
+        self.parameters_list = [self.BATCH_SIZE, self.ENC_EMB_DIM, self.DEC_EMB_DIM, self.HID_DIM, self.N_LAYERS, self.ENC_DROPOUT,self.DEC_DROPOUT,self.LEARNING_RATE,self.N_EPOCHS,self.CLIP]
+        parameters_int_list = ['BATCH_SIZE', 'ENC_EMB_DIM', 'DEC_EMB_DIM', 'HID_DIM','N_LAYERS','N_EPOCHS','CLIP'] # 输入为int
+        parameters_float_list = ['ENC_DROPOUT','DEC_DROPOUT','LEARNING_RATE'] # 输入为float
+        parameters_list_list = [] # 输入为list
+
+        while 1:
+            print("Model parameters are:")
+            for i in range(len(self.parameters_list)):
+                print("[{}] {}={}".format(i, str(self.parameters_name_list[i]), self.parameters_list[i]))
+            print("Do you want change model parameters?(yes/no)")
+            try:
+                input_choose = str(input())
+            except KeyError:
+                    print("Error num!")
+                    exit(-1)
+            if input_choose == 'yes':
+                print('choose parameter you want, give the number of parameter')
+                try:
+                    input_number = int(input())
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                print("your choose {}, print the number you want change".format(self.parameters_name_list[input_number]))
+                try:
+                    while True:
+                        parameter = input()
+                        if self.parameters_name_list[input_number] in parameters_int_list:
+                            parameter = int(parameter)
+                            break
+                        elif self.parameters_name_list[input_number] in parameters_float_list:
+                            parameter = float(parameter)
+                            break
+                        elif self.parameters_name_list[input_number] in parameters_list_list:
+                            parameter = list(str(parameter).split(','))
+                        else:
+                            print("Error input, your input format is wrong!")   
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                self.parameters_list[input_number] = parameter
+                print("update success!")
+            elif input_choose == 'no':
+                break
+            else:
+                print("wrong input, please input again！")
+                pass
+            
     def data_process(self):
         self.en2id, self.id2en, self.ch2id, self.id2ch, self.en_num_data, self.ch_num_data, self.train_set = \
                  seq2seq_dataprocess(self.input_data)

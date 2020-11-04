@@ -77,6 +77,52 @@ class Bert_premodel_for_NLP(Interface.Interface):
         self.train()
         self.predict()
 
+    def update_parameters(self):
+        self.parameters_name_list = ['maxlen', 'batch_size', 'max_pred', 'n_layers','n_heads','d_model','d_ff','d_k','d_v','n_segments']
+        self.parameters_list = [self.maxlen, self.batch_size, self.max_pred, self.n_layers, self.n_heads,self.d_model, self.d_ff, self.d_k,self.d_v,self.n_segments]
+        parameters_int_list = ['maxlen', 'batch_size', 'max_pred', 'n_layers','n_heads','d_model','d_ff','d_k','d_v','n_segments'] # 输入为int
+        parameters_float_list = [] # 输入为float
+
+        while 1:
+            print("Model parameters are:")
+            for i in range(len(self.parameters_list)):
+                print("[{}] {}={}".format(i, str(self.parameters_name_list[i]), self.parameters_list[i]))
+            print("Do you want change model parameters?(yes/no)")
+            try:
+                input_choose = str(input())
+            except KeyError:
+                    print("Error num!")
+                    exit(-1)
+            if input_choose == 'yes':
+                print('choose parameter you want, give the number of parameter')
+                try:
+                    input_number = int(input())
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                print("your choose {}, print the number you want change".format(self.parameters_name_list[input_number]))
+                try:
+                    while True:
+                        parameter = input()
+                        if self.parameters_name_list[input_number] in parameters_int_list:
+                            parameter = int(parameter)
+                            break
+                        elif self.parameters_name_list[input_number] in parameters_float_list:
+                            parameter = float(parameter)
+                            break
+                        else:
+                            print("Error input, your input format is wrong!")   
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                self.parameters_list[input_number] = parameter
+                print("update success!")
+            elif input_choose == 'no':
+                break
+            else:
+                print("wrong input, please input again！")
+                pass
+
     def data_process(self):
         self.batch, self.vocab_size, self.word2idx, self.idx2word, self.input_ids,\
         self.segment_ids, self.masked_tokens, self.masked_pos,\

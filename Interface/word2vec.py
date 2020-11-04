@@ -32,20 +32,67 @@ class word2vec(Interface.Interface):
         self.input_data = []
         self.input_labels = []
         self.embedding_size = embedding_size
-        self.learning_rate = 0.01
-        self.num_epochs = 10
-        self.batch_size = 512
-        self.max_window_size = 5
+        self.learning_rate = learning_rate
+        self.num_epochs = num_epochs
+        self.batch_size = batch_size
+        self.max_window_size = max_window_size
 
     # 控制流程
     def process(self):
         self.data_process()
+        self.update_parameters()
         self.make_batch()
         self.model()
         self.optimization()
         self.train()
         #self.predict()
         #self.test()
+
+    def update_parameters(self):
+        self.parameters_name_list = ['embedding_size', 'learning_rate', 'num_epochs', 'batch_size','max_window_size']
+        self.parameters_list = [self.embedding_size, self.learning_rate, self.num_epochs, self.batch_size, self.max_window_size]
+        parameters_int_list = ['embedding_size', 'num_epochs', 'batch_size','max_window_size'] # 输入为int
+        parameters_float_list = ['learning_rate'] # 输入为float
+
+        while 1:
+            print("Model parameters are:")
+            for i in range(len(self.parameters_list)):
+                print("[{}] {}={}".format(i, str(self.parameters_name_list[i]), self.parameters_list[i]))
+            print("Do you want change model parameters?(yes/no)")
+            try:
+                input_choose = str(input())
+            except KeyError:
+                    print("Error num!")
+                    exit(-1)
+            if input_choose == 'yes':
+                print('choose parameter you want, give the number of parameter')
+                try:
+                    input_number = int(input())
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                print("your choose {}, print the number you want change".format(self.parameters_name_list[input_number]))
+                try:
+                    while True:
+                        parameter = input()
+                        if self.parameters_name_list[input_number] in parameters_int_list:
+                            parameter = int(parameter)
+                            break
+                        elif self.parameters_name_list[input_number] in parameters_float_list:
+                            parameter = float(parameter)
+                            break
+                        else:
+                            print("Error input, your input format is wrong!")   
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                self.parameters_list[input_number] = parameter
+                print("update success!")
+            elif input_choose == 'no':
+                break
+            else:
+                print("wrong input, please input again！")
+                pass
 
     def make_batch(self):
         class MyDataset(torch.utils.data.Dataset):

@@ -38,8 +38,55 @@ class FastText_classify_text(Interface.Interface):
 
     # 控制流程
     def process(self):
+        self.update_parameters()
         self.model()
         self.predict()
+
+    def update_parameters(self):
+        self.parameters_name_list = ['lr', 'dim', 'epoch', 'word_ngrams']
+        self.parameters_list = [self.lr, self.dim, self.epoch, self.word_ngrams]
+        parameters_int_list = ['dim', 'epoch', 'word_ngrams'] # 输入为int
+        parameters_float_list = ['lr'] # 输入为float
+
+        while 1:
+            print("Model parameters are:")
+            for i in range(len(self.parameters_list)):
+                print("[{}] {}={}".format(i, str(self.parameters_name_list[i]), self.parameters_list[i]))
+            print("Do you want change model parameters?(yes/no)")
+            try:
+                input_choose = str(input())
+            except KeyError:
+                    print("Error num!")
+                    exit(-1)
+            if input_choose == 'yes':
+                print('choose parameter you want, give the number of parameter')
+                try:
+                    input_number = int(input())
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                print("your choose {}, print the number you want change".format(self.parameters_name_list[input_number]))
+                try:
+                    while True:
+                        parameter = input()
+                        if self.parameters_name_list[input_number] in parameters_int_list:
+                            parameter = int(parameter)
+                            break
+                        elif self.parameters_name_list[input_number] in parameters_float_list:
+                            parameter = float(parameter)
+                            break
+                        else:
+                            print("Error input, your input format is wrong!")   
+                except KeyError:
+                    print("Error num!")
+                    exit(-1)
+                self.parameters_list[input_number] = parameter
+                print("update success!")
+            elif input_choose == 'no':
+                break
+            else:
+                print("wrong input, please input again！")
+                pass
 
     def data_process(self):
         pass
