@@ -1,3 +1,5 @@
+import os
+import re
 import sys
 
 sys.path.append("..")
@@ -17,6 +19,68 @@ from Interface.model_test import Model_test
 from Interface.Bert_premodel_for_NLP import Bert_premodel_for_NLP
 from Interface.Data_process_controler import Data_process_controler
 
+# 判断循环(包括合法性、选项存在与否、文件存在与否）
+def loop_legal(input_ori, type, max = 9, path = ""):
+    # 判断输入格式是否有误
+    while (input_legal(input_ori, type) == False):
+        if type == 1:
+            print("[ERROR] Your input format is incorrect, please re-enter (example : 1) :")
+        elif type == 2:
+            print("[ERROR] Your input format is incorrect, please re-enter (example : sample.txt) :")
+        input_now = input()
+        if input_legal(input_now, type) == True:
+            if type == 1:
+                break
+            elif type == 2:
+                break
+        else:
+            continue
+    # 判断是否有该选项
+    if type == 1:
+        while (int(input_ori) > max or int(input_ori) <=int(0)):
+            print("[ERROR] this option does not exist!, please re-enter  (example : 1) :")
+            input_now = input()
+            if input_legal(input_now, type) == True:
+                if int(input_now) > max:
+                    continue
+                else:
+                    input_ori = input_now
+                    break
+        return int(input_ori)
+    # 判断是否存在该文件
+    elif type == 2:
+        while os.path.exists(path + input_ori) == False:
+            print("[ERROR] this file does not exist!, please re-enter  (example : sample.txt) :")
+            input_now = input()
+            if input_legal(input_now, type) == True:
+                if os.path.exists(path + input_now) == False:
+                    continue
+                else:
+                    input_ori = input_now
+                    break
+        return input_ori
+
+# 判断输入合法性
+def input_legal(input_ori, type):
+    legal = False
+    # 当需要输入int类型时
+    if type == 1:
+        matchObj = re.match(r"[0-9]", input_ori)
+        if matchObj != None:
+            legal = True
+            return legal
+        else:
+            return legal
+
+    # 当需要输入文件名
+    elif type == 2:
+        matchObj = re.match(r'\w+.txt', input_ori)
+        if matchObj != None:
+            legal = True
+            return legal
+        else:
+            return legal
+
 # 开始界面
 def start():
     print('*'*80)
@@ -35,22 +99,24 @@ def choose_system():
     print(' 3. Train Model by Yourself (Professional way) (this part)')
     print('Which part do you want to enter?')
     try:
-        input_system = int(input())
+        input_system = loop_legal(input(), 1, max=3)
     except KeyError:
         print("Error input")
         exit(-1)
     return input_system
 
-def data_process():
+# 选择数据处理功能
+def data_process(rawdata_root):
     print('*'*80)
     print("Enter Data Process System!")
     print("please choose your operation: (the number of operation)")
     print("1. en_tokenizer  2. cn_tokenizer     3. en_stopwords")
     print("4. cn_stopwords  5. lowfrequency     6. highfrequency")
     print("7. filter_lowfrequency  8. filter_html     9. stemming")
-    enter_num = int(input())
+    enter_num = loop_legal(input(), 1, max=9)
     print("please print the filename you want to process: (example: sample.txt)")
-    filename = str(input())
+    filename = input()
+    filename = loop_legal(filename, 2, path=rawdata_root)
     controler = Data_process_controler(filename, enter_num)
     controler.process()
     print('*'*80)
@@ -65,7 +131,7 @@ def choose():
     print('7. FastText_classify_text            8. Seq2seq_translate_text     9. Bert_premodel_for_NLP')
     print('*'*80)
     try:
-        number = int(input())
+        number = loop_legal(input(), 1, max=9)
     except KeyError:
         print("Error num!")
         exit(-1)
@@ -82,19 +148,23 @@ if __name__ == '__main__':
     while True:
         system_number = choose_system()
         if system_number == 1:
-            data_process()
+            rawdata_root = "../Data/raw_data/"
+            data_process(rawdata_root)
 
         elif system_number == 2:
+            testdata_root = "../Data/test_data/"
+            print('*' * 80)
             print("Use Trained Model to Predict!")
             print("please input the type of task:")
             print("1: embedding    2: classify")
-            number = int(input())
+            number = int(loop_legal(input(), 1, max=2))
             if number == 1:
                 print("please input model id:")
                 print("1: word2vec")
-                number = int(input())
+                number = int(loop_legal(input(), 1, max=1))
                 if number == 1:
-                    file = input('please input the filename\n')
+                    print('please input the filename:')
+                    file = loop_legal(input(), 2, path=testdata_root)
                     model = Model_test(1, 1, filename=file)
                     model.process()
 
@@ -110,7 +180,7 @@ if __name__ == '__main__':
             elif number == 4:
                 test = textRNN_classify()
             elif number == 5:
-                file = input('plese input the filename\n')
+                file = input('please input the filename\n')
                 test = word2vec(filename=file)
             elif number == 7:
                 test = FastText_classify_text()
@@ -121,10 +191,10 @@ if __name__ == '__main__':
             else:
                 pass
             test.process()
-        else:
-            print("wrong input")
-            print('*'*80)
-        print("the process of this opration is over, do you want exit our system? (yes/no)")
+        #else:
+        #    print("wrong input")
+        #    print('*'*80)
+        print("the process of this operation is over, do you want exit our system? (yes/no)")
         try:
             input_end_looper = str(input())
         except KeyError:
