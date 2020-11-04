@@ -222,7 +222,9 @@ Output:
 def read_file(path, encoding="UTF-8"):
     with open(path, encoding=encoding) as f:
         text = f.readlines()
+    print("Succeed read file!")
     return text
+    
 
 
 '''
