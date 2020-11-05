@@ -124,5 +124,3 @@ def input_legal(input_ori, type):
             return legal
         else:
             return legal
-
-loop_legal(input(), 3)
