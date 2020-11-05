@@ -1,5 +1,3 @@
-import os
-import re
 import sys
 
 sys.path.append("..")
@@ -8,76 +6,22 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy
-from Interface.NNLM_predict_next_word import NNLM_predict_N_word
+'''
+from Interface.NNLM_predict_next_word import NNLM_predict_next_word
 from Interface.textCNN_classify import textCNN_classify
 from Interface.transformer_translate import transformer_translate
 from Interface.textRNN_classify import textRNN_classify
 from Interface.word2vec import word2vec
-from Interface.model_test import Model_test
 #from Interface.FastText_classify_text import FastText_classify_text
 #from Interface.Seq2seq_translate_text import Seq2seq_translate_text
 from Interface.Bert_premodel_for_NLP import Bert_premodel_for_NLP
+'''
+
+from Interface.model_test import Model_test
 from Interface.Data_process_controler import Data_process_controler
+from Interface.loop_legal import loop_legal
 
-# 判断循环(包括合法性、选项存在与否、文件存在与否）
-def loop_legal(input_ori, type, max = 9, path = ""):
-    # 判断输入格式是否有误
-    while (input_legal(input_ori, type) == False):
-        if type == 1:
-            print("[ERROR] Your input format is incorrect, please re-enter (example : 1) :")
-        elif type == 2:
-            print("[ERROR] Your input format is incorrect, please re-enter (example : sample.txt) :")
-        input_now = input()
-        if input_legal(input_now, type) == True:
-            input_ori = input_now
-            break
-        else:
-            continue
-    # 判断是否有该选项
-    if type == 1:
-        while (int(input_ori) > max or int(input_ori) <=int(0)):
-            print("[ERROR] this option does not exist!, please re-enter  (example : 1) :")
-            input_now = input()
-            if input_legal(input_now, type) == True:
-                if (int(input_now) > max or int(input_now) <=int(0)):
-                    continue
-                else:
-                    input_ori = input_now
-                    break
-        return int(input_ori)
-    # 判断是否存在该文件
-    elif type == 2:
-        while os.path.exists(path + input_ori) == False:
-            print("[ERROR] this file does not exist!, please re-enter  (example : sample.txt) :")
-            input_now = input()
-            if input_legal(input_now, type) == True:
-                if os.path.exists(path + input_now) == False:
-                    continue
-                else:
-                    input_ori = input_now
-                    break
-        return input_ori
 
-# 判断输入合法性
-def input_legal(input_ori, type):
-    legal = False
-    # 当需要输入int类型时
-    if type == 1:
-        matchObj = re.match(r"[0-9]", input_ori)
-        if matchObj != None:
-            legal = True
-            return legal
-        else:
-            return legal
-
-    # 当需要输入文件名
-    elif type == 2:
-        matchObj = re.match(r'\w+.txt', input_ori)
-        if matchObj != None:
-            legal = True
-            return legal
-        else:
-            return legal
 
 # 开始界面
 def start():
@@ -167,9 +111,13 @@ if __name__ == '__main__':
 
 
         elif system_number == 3:
+            methods = ['NNLM_predict_next_word', 'textCNN_classify', 'transformer_translate',
+                      'textRNN_classify', 'word2vec', 'Elmo',
+                      'FastText_classify_text', 'Seq2seq_translate_text', 'Bert_premodel_for_NLP']
             number = choose()
+            exec('from Interface.' + methods[number - 1] + ' import ' + methods[number - 1])
             if number == 1:
-                test = NNLM_predict_N_word()
+                test = NNLM_predict_next_word()
             elif number == 2:
                 test = textCNN_classify()
             elif number == 3:
@@ -193,7 +141,7 @@ if __name__ == '__main__':
         #    print('*'*80)
         print("the process of this operation is over, do you want exit our system? (yes/no)")
         try:
-            input_end_looper = str(input())
+            input_end_looper = loop_legal(input(), 3)
         except KeyError:
             print("Error input!")
             exit(-1)

@@ -21,7 +21,7 @@ from Logistic.model.NNLM import NNLM
     针对给出的前N-1个word预测出的第N个word的list序列
 '''
 
-class NNLM_predict_N_word(Interface.Interface):
+class NNLM_predict_next_word(Interface.Interface):
     def __init__(self, input_data = ["i like dog i like coffee", "i like coffee i like coffee", "i hate milk i like coffee", "i like coffee i like coffee", "i like chongqing i like coffee"],\
                  n_step = 5, n_hidden = 3, m = 3, lr = 0.001):
         #super(Interface, self).__init__()
