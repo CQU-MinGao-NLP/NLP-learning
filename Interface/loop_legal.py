@@ -12,25 +12,27 @@ Input:
         type = 2: filename
         type = 3: yes or no
         type = 4: float
-    [3] max: the max number of option, it is necessary when the type is 1 (default 9)
+    [3] max_value: the max number of option, it is necessary when the type is 1 (default 9)
     [4] path: the path of file, it is necessary when th type is 2 (default "")
 Output:
     a valid input
 '''
 
+def change_print_color(s):
+    return "\033[31m" + s + "\033[0m"
 
 # 判断循环(包括合法性、选项存在与否、文件存在与否）
-def loop_legal(input_ori, type, max = 9, path = ""):
+def loop_legal(input_ori, type, max_value = 9, path = ""):
     # 判断输入格式是否有误
     while (input_legal(input_ori, type) == False):
         if type == 1:
-            print("[ERROR] Your input format is incorrect, please re-enter a number (example : 1) :")
+            print(change_print_color("[ERROR] Your input format is incorrect, please re-enter a number (example : 1) :"))
         elif type == 2:
-            print("[ERROR] Your input format is incorrect, please re-enter a filename (example : sample.txt) :")
+            print(change_print_color("[ERROR] Your input format is incorrect, please re-enter a filename (example : sample.txt) :"))
         elif type == 3:
-            print("[ERROR] Your input format is incorrect, please re-enter 'yes' or 'no' (example : yes) :")
+            print(change_print_color("[ERROR] Your input format is incorrect, please re-enter 'y' or 'n' (example : y) :"))
         elif type == 4:
-            print("[ERROR] Your input format is incorrect, please re-enter a float (example : 0.001) :")
+            print(change_print_color("[ERROR] Your input format is incorrect, please re-enter a float (example : 0.001) :"))
         input_now = input()
         if input_legal(input_now, type) == True:
             input_ori = input_now
@@ -39,11 +41,11 @@ def loop_legal(input_ori, type, max = 9, path = ""):
             continue
     # 判断是否有该选项
     if type == 1:
-        while (int(input_ori) > max or int(input_ori) <=int(0)):
-            print("[ERROR] this option does not exist or your input format is incorrect, please re-enter a number (example : 1) :")
+        while (int(input_ori) > max_value or int(input_ori) <=int(0)):
+            print(change_print_color("[ERROR] this option does not exist or your input format is incorrect, please re-enter a number (example : 1) :"))
             input_now = input()
-            if input_legal(input_now, type, max=max) == True:
-                if (int(input_now) > max or int(input_now) <=int(0)):
+            if input_legal(input_now, type) == True:
+                if (int(input_now) > max_value or int(input_now) <=int(0)):
                     continue
                 else:
                     input_ori = input_now
@@ -52,9 +54,9 @@ def loop_legal(input_ori, type, max = 9, path = ""):
     # 判断是否存在该文件
     elif type == 2:
         while os.path.exists(path + input_ori) == False:
-            print("[ERROR] this file does not exist or your input format is incorrect, please re-enter a filename  (example : sample.txt) :")
+            print(change_print_color("[ERROR] this file does not exist or your input format is incorrect, please re-enter a filename  (example : sample.txt) :"))
             input_now = input()
-            if input_legal(input_now, type, path=path) == True:
+            if input_legal(input_now, type) == True:
                 if os.path.exists(path + input_now) == False:
                     continue
                 else:
@@ -63,11 +65,11 @@ def loop_legal(input_ori, type, max = 9, path = ""):
         return input_ori
     # 判断输入是否为yes或no
     elif type == 3:
-        while input_ori != "yes" and input_ori != "no":
-            print("[ERROR] this option does not exist or your input format is incorrect, please re-enter 'yes' or 'no'  (example : yes) :")
+        while input_ori != "y" and input_ori != "n":
+            print(change_print_color("[ERROR] this option does not exist or your input format is incorrect, please re-enter 'y' or 'n'  (example : y) :"))
             input_now = input()
             if input_legal(input_now, type) == True:
-                if input_now != "yes" and input_now != "no":
+                if input_now != "y" and input_now != "n":
                     continue
                 else:
                     input_ori = input_now
@@ -76,7 +78,7 @@ def loop_legal(input_ori, type, max = 9, path = ""):
     # 判断浮点数float是否为0-1
     elif type == 4:
         while float(input_ori) <= float(0.0) or float(input_ori) >= float(1.0):
-            print("[ERROR] it is out of the range of 0 to 1 or your input format is incorrect, please re-enter a float  (example : 0.001) :")
+            print(change_print_color("[ERROR] it is out of the range of 0 to 1 or your input format is incorrect, please re-enter a float  (example : 0.001) :"))
             input_now = input()
             if input_legal(input_now, type) == True:
                 if float(input_now) <= float(0.0) or float(input_now) >= float(1.0):

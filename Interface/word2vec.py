@@ -29,8 +29,6 @@ class word2vec(Interface.Interface):
     def __init__(self, filename, embedding_size=100, learning_rate = 0.01, num_epochs = 10, batch_size = 512, max_window_size = 5):
         #super(Interface, self).__init__()
         self.filename = filename
-        self.input_data = []
-        self.input_labels = []
         self.embedding_size = embedding_size
         self.learning_rate = learning_rate
         self.num_epochs = num_epochs
@@ -39,7 +37,9 @@ class word2vec(Interface.Interface):
 
     # 控制流程
     def process(self):
+        print("load data...")
         self.data_process()
+        print("load data succeed!")
         self.update_parameters()
         self.make_batch()
         self.model()
@@ -146,6 +146,8 @@ class word2vec(Interface.Interface):
         # ！！！！！！！！！！！！！！！
         self.idx_to_token = [tk for tk, _ in counter.items()]
         self.token_to_idx = {tk: idx for idx, tk in enumerate(self.idx_to_token)}
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
         dict_save(dict(zip(list(range(len(self.idx_to_token))), self.idx_to_token)), MODEL_ROOT + "word2vec_idx2token.txt")
         dict_save(self.token_to_idx, MODEL_ROOT + "word2vec_token2idx.txt")
 
@@ -220,7 +222,7 @@ class word2vec(Interface.Interface):
             u = embed_u(contexts_and_negatives)
             pred = torch.bmm(v, u.permute(0, 2, 1))
             return pred
-        print('start train!')
+        print('start train...')
         
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print("train on", device)
@@ -244,6 +246,7 @@ class word2vec(Interface.Interface):
                 % (epoch + 1, l_sum / n, time.time() - start))
 
         torch.save(self.word2vec_net, MODEL_ROOT+'word2vec.pkl')
+        print("The model has been saved in "+ MODEL_ROOT[3:]+'word2vec.pkl')
 
     def predict(self):
         pass

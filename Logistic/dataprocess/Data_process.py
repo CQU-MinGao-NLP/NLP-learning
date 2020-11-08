@@ -222,7 +222,6 @@ Output:
 def read_file(path, encoding="UTF-8"):
     with open(path, encoding=encoding) as f:
         text = f.readlines()
-    print("Succeed read file!")
     return text
     
 
@@ -242,7 +241,7 @@ def save_file(data, path, encoding="UTF-8"):
     with open(path, 'w', encoding=encoding,) as f:
         for line in data:
             for word in line:
-                f.write(word)
+                f.write(str(word))
                 f.write(' ')
             f.write('\n')
 

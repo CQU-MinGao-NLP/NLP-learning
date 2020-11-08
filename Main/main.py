@@ -22,6 +22,18 @@ from Interface.Data_process_controler import Data_process_controler
 from Interface.loop_legal import loop_legal
 
 
+data_process_dict = {"1": "en_tokenizer",  "2": "cn_tokenizer", "3": "en_stopwords",
+                     "4": "cn_stopwords",  "5": "filter_lowfrequency", "6": "filter_html",
+                     "7": "stemming"}
+
+train_model_dict = {"1": 'NNLM_predict_next_word', "2": 'textCNN_classify', "3": 'transformer_translate',
+                    "4": 'textRNN_classify', "5": 'word2vec', "6": 'Seq2seq_translate_text',
+                    "7": 'Bert_premodel_for_NLP'}
+
+test_model_dict = {"1": 'NNLM_predict_next_word', "2": 'textCNN_classify', "3": 'transformer_translate',
+                   "4": 'textRNN_classify', "5": 'word2vec', "6": 'Elmo',
+                   "7": 'FastText_classify_text', "8": 'Seq2seq_translate_text', "9": 'Bert_premodel_for_NLP'}
+
 
 # 开始界面
 def start():
@@ -36,12 +48,12 @@ def start():
 def choose_system():
     print('*'*80)
     print('Our system are seperated into three parts:')
-    print(' 1. Data Process (this part)')
-    print(' 2. Use Trained Model to Predict (Simple way) (this part)')
-    print(' 3. Train Model by Yourself (Professional way) (this part)')
+    print(' 1. Data Process ')
+    print(' 2. Use Trained Model to Predict (Simple way) ')
+    print(' 3. Train Model by Yourself (Professional way) ')
     print('Which part do you want to enter?')
     try:
-        input_system = loop_legal(input(), 1, max=3)
+        input_system = loop_legal(input(), 1, max_value=3)
     except KeyError:
         print("Error input")
         exit(-1)
@@ -53,26 +65,26 @@ def data_process(rawdata_root):
     print("Enter Data Process System!")
     print("please choose your operation: (the number of operation)")
     print("1. en_tokenizer  2. cn_tokenizer     3. en_stopwords")
-    print("4. cn_stopwords  5. lowfrequency     6. highfrequency")
-    print("7. filter_lowfrequency  8. filter_html     9. stemming")
-    enter_num = loop_legal(input(), 1, max=9)
-    print("please print the filename you want to process: (example: sample.txt)")
+    print("4. cn_stopwords  5. filter_lowfrequency     6. filter_html")
+    print("7. stemming ")
+    enter_num = loop_legal(input(), 1, max_value=7)
+    print("please input the filename (example: sample.txt) you want to process, assert that your file is in \"Data/raw_data\": ")
     filename = loop_legal(input(), 2, path=rawdata_root)
-    controler = Data_process_controler(filename, enter_num)
+    controler = Data_process_controler(filename, data_process_dict[str(enter_num)])
     controler.process()
     print('*'*80)
 
 # 选择所需的接口
-def choose():
+def train_choose():
     print('*'*80)
     print('There are some basic models to choose, please choose one')
     print('(example: if you input 1 with <enter>, you will run NNLM)')
     print('1. NNLM_predict_next_word(sample)    2. textCNN_classify           3. transformer_translate')
-    print('4. textRNN_classify                  5. word2vec                   6. ELMo')
-    print('7. FastText_classify_text            8. Seq2seq_translate_text     9. Bert_premodel_for_NLP')
+    print('4. textRNN_classify                  5. word2vec                   6. Seq2seq_translate_text')
+    print('7. Bert_premodel_for_NLP')
     print('*'*80)
     try:
-        number = loop_legal(input(), 1, max=9)
+        number = loop_legal(input(), 1, max_value=7)
     except KeyError:
         print("Error num!")
         exit(-1)
@@ -93,31 +105,30 @@ if __name__ == '__main__':
             data_process(rawdata_root)
 
         elif system_number == 2:
-            testdata_root = "../Data/test_data/"
+            test_data_root = "../Data/test_data/"
             print('*' * 80)
             print("Use Trained Model to Predict!")
             print("please input the type of task:")
             print("1: embedding    2: classify")
-            number = int(loop_legal(input(), 1, max=2))
+            number = int(loop_legal(input(), 1, max_value=2))
             if number == 1:
                 print("please input model id:")
                 print("1: word2vec")
-                number = int(loop_legal(input(), 1, max=1))
+                number = int(loop_legal(input(), 1, max_value=1))
                 if number == 1:
                     print('please input the filename:')
-                    file = loop_legal(input(), 2, path=testdata_root)
+                    file = loop_legal(input(), 2, path=test_data_root)
                     model = Model_test(1, 1, filename=file)
                     model.process()
 
-
         elif system_number == 3:
-            methods = ['NNLM_predict_next_word', 'textCNN_classify', 'transformer_translate',
-                      'textRNN_classify', 'word2vec', 'Elmo',
-                      'FastText_classify_text', 'Seq2seq_translate_text', 'Bert_premodel_for_NLP']
-            number = choose()
-            exec('from Interface.' + methods[number - 1] + ' import ' + methods[number - 1])
+            train_data_root = "../Data/train_data/"
+            number = train_choose()
+            file = loop_legal(input('please input the filename, assert that your file is in \"Data/train_data\" \n'),
+                              2, path=train_data_root)
+            exec('from Interface.' + train_model_dict[str(number)] + ' import ' + train_model_dict[str(number)])
             if number == 1:
-                test = NNLM_predict_next_word()
+                test = NNLM_predict_next_word(filename=file)
             elif number == 2:
                 test = textCNN_classify()
             elif number == 3:
@@ -125,13 +136,10 @@ if __name__ == '__main__':
             elif number == 4:
                 test = textRNN_classify()
             elif number == 5:
-                file = input('please input the filename\n')
                 test = word2vec(filename=file)
-            elif number == 7:
-                test = FastText_classify_text()
-            elif number == 8:
+            elif number == 6:
                 test = Seq2seq_translate_text()
-            elif number == 9:
+            elif number == 7:
                 test = Bert_premodel_for_NLP()
             else:
                 pass
@@ -139,15 +147,15 @@ if __name__ == '__main__':
         #else:
         #    print("wrong input")
         #    print('*'*80)
-        print("the process of this operation is over, do you want exit our system? (yes/no)")
+        print("the process of this operation is over, do you want exit our system? (y/n)")
         try:
-            input_end_looper = loop_legal(input(), 3)
+            input_end_looper = loop_legal(str.lower(input()), 3)
         except KeyError:
             print("Error input!")
             exit(-1)
-        if input_end_looper == 'yes':
+        if input_end_looper == 'y':
             break
-        elif input_end_looper == 'no':
+        elif input_end_looper == 'n':
             pass
         else:
             print("Error input")

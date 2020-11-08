@@ -1,9 +1,14 @@
 import sys
-sys.path.append("..") 
+import os
+
+from Logistic.dataprocess.Data_process import dict_save
+
+sys.path.append("..")
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.utils.data as Data
 import numpy
 from Interface import Interface
 from Logistic.dataprocess.get_dictionary_and_num import *
@@ -21,31 +26,67 @@ from Logistic.model.NNLM import NNLM
     针对给出的前N-1个word预测出的第N个word的list序列
 '''
 
+MODEL_ROOT = "../Data/model/NNLM_predict_next_word/"
+DATA_ROOT = "../Data/train_data/"
+
 class NNLM_predict_next_word(Interface.Interface):
-    def __init__(self, input_data = ["i like dog i like coffee", "i like coffee i like coffee", "i hate milk i like coffee", "i like coffee i like coffee", "i like chongqing i like coffee"],\
-                 n_step = 5, n_hidden = 3, m = 3, lr = 0.001):
+    def __init__(self, filename, n_step=5, n_hidden=3, m=3, lr=0.001, batch_size=32, num_epochs=500):
         #super(Interface, self).__init__()
-        self.input_data = input_data
+        self.input_data = []
+        self.input = []
+        self.target = []
+        self.filename = filename
         self.m = m
         self.n_step = n_step
         self.n_hidden = n_hidden
         self.lr = lr
+        self.batch_size = batch_size
+        self.num_epochs = num_epochs
 
     # 控制流程
     def process(self):
+        print('load data...')
         self.data_process()
+        print('read data succeed!')
         self.update_parameters()
-        self.make_batch(self.input_data)
+        self.make_batch()
         self.model()
         self.optimization()
         self.train()
-        self.predict()
-        self.test()
-    
+        #self.predict()
+        #self.test()
+
+    def data_process(self):
+        with open(DATA_ROOT + self.filename, 'r') as f:
+            lines = f.readlines()
+            raw_dataset = [st.split() for st in lines]
+
+        for line in raw_dataset:
+            length = len(line)
+            if length < (self.n_step+1):
+                continue
+            for i in range(len(line)-self.n_step-1):
+                self.input_data.append(line[i:(i+self.n_step+1)])
+        # 得到词典，获取词典数目
+        self.word_dict, self.number_dict, self.n_class = get_dictionary_and_num(self.input_data)
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
+        dict_save(self.number_dict, MODEL_ROOT + "NNLM_predict_next_word_idx2token.txt")
+        dict_save(self.word_dict, MODEL_ROOT + "NNLM_predict_next_word_token2idx.txt")
+        self.deal_input_data()
+
+    # 将数据分为前N-1个词（input）和所需预测的第N个词（target）
+    def deal_input_data(self):
+        for word in self.input_data:
+            input = [self.word_dict[n] for n in word[:-1]] # create (1~n-1) as input
+            target = self.word_dict[word[-1]] # create (n) as target, We usually call this 'casual language model'
+            self.input.append(input)
+            self.target.append(target)
+
     def update_parameters(self):
-        self.parameters_name_list = ['n_class', 'm', 'n_step', 'n_hidden','lr']
-        self.parameters_list = [self.n_class, self.m, self.n_step, self.n_hidden, self.lr]
-        parameters_int_list = ['n_class', 'm', 'n_step', 'n_hidden'] # 输入为int
+        self.parameters_name_list = ['m', 'n_step', 'n_hidden','lr','batch_size', 'num_epochs']
+        self.parameters_list = [self.m, self.n_step, self.n_hidden, self.lr, self.batch_size, self.num_epochs]
+        parameters_int_list = ['m', 'n_step', 'n_hidden', 'batch_size', 'num_epochs'] # 输入为int
         parameters_float_list = ['lr'] # 输入为float
 
         while 1:
@@ -89,27 +130,15 @@ class NNLM_predict_next_word(Interface.Interface):
                 pass
                 
 
-    # 将数据分为前N-1个词（input_batch）和所需预测的第N个词（target_batch）
-    def make_batch(self, input_data):
-        self.input_batch = []
-        self.target_batch = []
-        for sen in input_data:
-            word = sen.split() # space tokenizer
-            input = [self.word_dict[n] for n in word[:-1]] # create (1~n-1) as input
-            target = self.word_dict[word[-1]] # create (n) as target, We usually call this 'casual language model'
-            self.input_batch.append(input)
-            self.target_batch.append(target)
-        print("input_batch:")
-        print(self.input_batch)
-        print("target_batch:")
-        print(self.target_batch)
 
-    def data_process(self):
-        # 得到词典，获取词典数目
-        self.word_dict, self.number_dict, self.n_class = get_dictionary_and_num(self.input_data)
 
+    def make_batch(self):
+        self.data_iter = Data.DataLoader(torch.utils.data.TensorDataset(torch.tensor(self.input), torch.tensor(self.target)), self.batch_size, shuffle=True)
 
     def model(self):
+        self.m, self.n_step, self.n_hidden, self.lr, self.batch_size, self.num_epochs = \
+            self.parameters_list[0], self.parameters_list[1], self.parameters_list[2], self.parameters_list[3], \
+            self.parameters_list[4], self.parameters_list[5]
         self.NNLM_model = NNLM(self.n_class, self.n_step, self.n_hidden, self.m)
 
 
@@ -119,21 +148,24 @@ class NNLM_predict_next_word(Interface.Interface):
 
     def train(self):
         print('start train!')
-        self.tensor_input_batch = torch.LongTensor(self.input_batch)
-        self.tensor_target_batch = torch.LongTensor(self.target_batch)
-
         # Training
-        for epoch in range(5000):
+        print(self.parameters_list)
+        print(self.num_epochs)
+        for epoch in range(self.num_epochs):
             self.optimizer.zero_grad()
-            output = self.NNLM_model(self.tensor_input_batch)
+            for X, y in self.data_iter:
+                output = self.NNLM_model(X)
 
-            # output : [batch_size, n_class], target_batch : [batch_size]
-            loss = self.criterion(output, self.tensor_target_batch)
-            if (epoch + 1) % 1000 == 0:
-                print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.6f}'.format(loss))
+                # output : [batch_size, n_class], target_batch : [batch_size]
+                loss = self.criterion(output, y)
+            print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.6f}'.format(loss))
 
             loss.backward()
             self.optimizer.step()
+
+        torch.save(self.NNLM_model, MODEL_ROOT + 'NNLM_predict_next_word.pkl')
+        print("The model has been saved in " + MODEL_ROOT[3:] + 'NNLM_predict_next_word.pkl')
+
     def predict(self):
         # Predict
         print('start predict!')
