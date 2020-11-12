@@ -66,10 +66,11 @@ def data_process(rawdata_root):
     print("please choose your operation: (the number of operation)")
     print("1. en_tokenizer  2. cn_tokenizer     3. en_stopwords")
     print("4. cn_stopwords  5. filter_lowfrequency     6. filter_html")
-    print("7. stemming ")
-    enter_num = loop_legal(input(), 1, max_value=7)
+    print("7. stemming")
+    enter_num = loop_legal(input(), 1, max_value=len(data_process_dict))
     print("please input the filename (example: sample.txt) you want to process, assert that your file is in \"Data/raw_data\": ")
-    filename = loop_legal(input(), 2, path=rawdata_root)
+    #filename = loop_legal(input(), 2, path=rawdata_root)
+    filename = input()
     controler = Data_process_controler(filename, data_process_dict[str(enter_num)])
     controler.process()
     print('*'*80)
@@ -84,7 +85,7 @@ def train_choose():
     print('7. Bert_premodel_for_NLP')
     print('*'*80)
     try:
-        number = loop_legal(input(), 1, max_value=7)
+        number = loop_legal(input(), 1, max_value=len(train_model_dict))
     except KeyError:
         print("Error num!")
         exit(-1)
@@ -130,11 +131,11 @@ if __name__ == '__main__':
             if number == 1:
                 test = NNLM_predict_next_word(filename=file)
             elif number == 2:
-                test = textCNN_classify()
+                test = textCNN_classify(filename=file)
             elif number == 3:
                 test = transformer_translate()
             elif number == 4:
-                test = textRNN_classify()
+                test = textRNN_classify(filename=file)
             elif number == 5:
                 test = word2vec(filename=file)
             elif number == 6:

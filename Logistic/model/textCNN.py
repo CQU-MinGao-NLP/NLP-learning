@@ -24,7 +24,6 @@ class TextCNN(nn.Module):
         embedded_chars = self.W(X) # [batch_size, sequence_length, sequence_length]
         embedded_chars = embedded_chars.unsqueeze(1) # add channel(=1) [batch, channel(=1), sequence_length, embedding_size]
 
-
         pooled_outputs = []
         for i, conv in enumerate(self.filter_list):
             # conv : [input_channel(=1), output_channel(=3), (filter_height, filter_width), bias_option]

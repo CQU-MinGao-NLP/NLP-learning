@@ -37,9 +37,9 @@ class word2vec(Interface.Interface):
 
     # 控制流程
     def process(self):
-        print("load data...")
+        print("loading data...")
         self.data_process()
-        print("load data succeed!")
+        print("loading data succeed!")
         self.update_parameters()
         self.make_batch()
         self.model()

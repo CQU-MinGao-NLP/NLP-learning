@@ -1,6 +1,7 @@
 import sys
 import os
 
+from Interface.loop_legal import loop_legal
 from Logistic.dataprocess.Data_process import dict_save
 
 sys.path.append("..")
@@ -45,9 +46,9 @@ class NNLM_predict_next_word(Interface.Interface):
 
     # 控制流程
     def process(self):
-        print('load data...')
+        print("loading data...")
         self.data_process()
-        print('read data succeed!')
+        print("loading data succeed!")
         self.update_parameters()
         self.make_batch()
         self.model()
@@ -93,27 +94,28 @@ class NNLM_predict_next_word(Interface.Interface):
             print("Model parameters are:")
             for i in range(len(self.parameters_list)):
                 print("[{}] {}={}".format(i, str(self.parameters_name_list[i]), self.parameters_list[i]))
-            print("Do you want change model parameters?(yes/no)")
+            print("Do you want change model parameters?(y/n)")
             try:
-                input_choose = str(input())
+                input_choose = loop_legal(str.lower(input()), 3)
             except KeyError:
                     print("Error num!")
                     exit(-1)
-            if input_choose == 'yes':
+            if input_choose == 'y':
                 print('choose parameter you want, give the number of parameter')
                 try:
-                    input_number = int(input())
+                    input_number = loop_legal(input(), 1, max_value=len(self.parameters_list))
                 except KeyError:
                     print("Error num!")
                     exit(-1)
                 print("your choose {}, print the number you want change".format(self.parameters_name_list[input_number]))
                 try:
                     while True:
-                        parameter = input()
                         if self.parameters_name_list[input_number] in parameters_int_list:
+                            parameter = loop_legal(input(), 1, max_value=sys.maxsize)
                             parameter = int(parameter)
                             break
                         elif self.parameters_name_list[input_number] in parameters_float_list:
+                            parameter = loop_legal(input(), 4, max_value=float(1.0))
                             parameter = float(parameter)
                             break
                         else:
@@ -123,7 +125,7 @@ class NNLM_predict_next_word(Interface.Interface):
                     exit(-1)
                 self.parameters_list[input_number] = parameter
                 print("update success!")
-            elif input_choose == 'no':
+            elif input_choose == 'n':
                 break
             else:
                 print("wrong input, please input again！")

@@ -1,10 +1,13 @@
 import collections
+import random
 import re
 import sys
 import nltk
 import jieba
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
+from tqdm import tqdm
+import os
 
 sys.path.append("..")
 
@@ -286,4 +289,16 @@ def dict_load(path):
 
 
 
+def read_pos_neg_data(filename):
+    data = []
+    for label in ['pos', 'neg']:
+        #folder_name = os.path.join("../Data/raw_data/"+filename, label)
+        folder_name = "../../Data/raw_data/"+filename+"/"+label
+        for file in tqdm(os.listdir(folder_name)):
+            with open(os.path.join(folder_name, file), 'rb') as f:
+                review = f.read().decode('utf-8').replace('\n', '').lower()
+                data.append([1 if label == 'pos' else 0, review])
+    save_file(data, "../../Data/raw_data/fenlei/classify_data.txt")
 
+if __name__ == "__main__":
+    read_pos_neg_data("fenlei")

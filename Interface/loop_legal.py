@@ -41,11 +41,11 @@ def loop_legal(input_ori, type, max_value = 9, path = ""):
             continue
     # 判断是否有该选项
     if type == 1:
-        while (int(input_ori) > max_value or int(input_ori) <=int(0)):
+        while (int(input_ori) > int(max_value) or int(input_ori) <=int(0)):
             print(change_print_color("[ERROR] this option does not exist or your input format is incorrect, please re-enter a number (example : 1) :"))
             input_now = input()
             if input_legal(input_now, type) == True:
-                if (int(input_now) > max_value or int(input_now) <=int(0)):
+                if (int(input_now) > int(max_value) or int(input_now) <=int(0)):
                     continue
                 else:
                     input_ori = input_now
@@ -77,28 +77,24 @@ def loop_legal(input_ori, type, max_value = 9, path = ""):
         return input_ori
     # 判断浮点数float是否为0-1
     elif type == 4:
-        while float(input_ori) <= float(0.0) or float(input_ori) >= float(1.0):
-            print(change_print_color("[ERROR] it is out of the range of 0 to 1 or your input format is incorrect, please re-enter a float  (example : 0.001) :"))
+        while (float(input_ori) > float(max_value) or float(input_ori) <= float(0.0)):
+            print(change_print_color("[ERROR] this option does not exist or your input format is incorrect, please re-enter a float  (example : 0.001) :"))
             input_now = input()
             if input_legal(input_now, type) == True:
-                if float(input_now) <= float(0.0) or float(input_now) >= float(1.0):
+                if (float(input_now) > float(max_value) or float(input_now) <=float(0.0)):
                     continue
                 else:
                     input_ori = input_now
                     break
-        return input_ori
+        return float(input_ori)
 
 # 判断输入合法性
 def input_legal(input_ori, type):
     legal = False
     # 当需要输入int类型时
     if type == 1:
-        matchObj = re.match(r"[0-9]", input_ori)
-        if matchObj != None:
-            legal = True
-            return legal
-        else:
-            return legal
+        legal = input_ori.isdigit()
+        return legal
 
     # 当需要输入文件名
     elif type == 2:
