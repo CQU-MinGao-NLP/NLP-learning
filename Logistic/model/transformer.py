@@ -122,7 +122,8 @@ class Encoder(nn.Module):
 
     def forward(self, enc_inputs): # enc_inputs : [batch_size x source_len]
         # 这里的mask和position编码没怎么看懂， 这里的mask是为了截断或padding
-        enc_outputs = self.src_emb(enc_inputs) + self.pos_emb(torch.LongTensor([[1,2,3,4,0]]))
+        # enc_outputs = self.src_emb(enc_inputs) + self.pos_emb(torch.LongTensor([[1,2,3,4,0]]))
+        enc_outputs = self.src_emb(enc_inputs) + self.pos_emb(torch.LongTensor([list(range(enc_inputs.size(1)))[1:] + [0]]))
         enc_self_attn_mask = get_attn_pad_mask(enc_inputs, enc_inputs)
         #print(enc_outputs)
         #print(enc_self_attn_mask)
@@ -141,7 +142,8 @@ class Decoder(nn.Module):
         self.layers = nn.ModuleList([DecoderLayer(d_model, d_k, d_v,n_heads, d_ff) for _ in range(n_layers)])
 
     def forward(self, dec_inputs, enc_inputs, enc_outputs): # dec_inputs : [batch_size x target_len]
-        dec_outputs = self.tgt_emb(dec_inputs) + self.pos_emb(torch.LongTensor([[5,1,2,3,4]]))
+        # dec_outputs = self.tgt_emb(dec_inputs) + self.pos_emb(torch.LongTensor([[5,1,2,3,4]]))
+        dec_outputs = self.tgt_emb(dec_inputs) + self.pos_emb(torch.LongTensor([[dec_inputs.size(1)] + list(range(1, dec_inputs.size(1)))]))
         dec_self_attn_pad_mask = get_attn_pad_mask(dec_inputs, dec_inputs)
         dec_self_attn_subsequent_mask = get_attn_subsequent_mask(dec_inputs)
         dec_self_attn_mask = torch.gt((dec_self_attn_pad_mask + dec_self_attn_subsequent_mask), 0)

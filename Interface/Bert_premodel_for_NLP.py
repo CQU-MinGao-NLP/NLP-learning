@@ -1,10 +1,15 @@
+import re
+from random import randrange, shuffle, random, randint
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy
 from Interface import Interface
+from Logistic.dataprocess.Data_process import read_file
 from Logistic.dataprocess.bert_dataprocess import bert_dataprocess
 from Logistic.model.Bert import Bert
+import torch.utils.data as Data
 
 '''
 功能：
@@ -25,7 +30,23 @@ from Logistic.model.Bert import Bert
     针对随机抽取的两个句子预测出mask的词语，并判断第二句是否为第一句的后一句
 '''
 
+MODEL_ROOT = "../Data/model/Bert_premodel_for_NLP/"
+DATA_ROOT = "../Data/train_data/"
 
+class MyDataSet(Data.Dataset):
+    def __init__(self, input_ids, segment_ids, masked_tokens, masked_pos, isNext):
+        self.input_ids = input_ids
+        self.segment_ids = segment_ids
+        self.masked_tokens = masked_tokens
+        self.masked_pos = masked_pos
+        self.isNext = isNext
+
+    def __len__(self):
+        return len(self.input_ids)
+
+    def __getitem__(self, idx):
+        return self.input_ids[idx], self.segment_ids[idx], self.masked_tokens[idx], self.masked_pos[idx], self.isNext[
+            idx]
 
 class Bert_premodel_for_NLP(Interface.Interface):
     '''
@@ -36,7 +57,8 @@ class Bert_premodel_for_NLP(Interface.Interface):
     d_ff 表示 Encoder Layer 中全连接层的维度
     n_segments 表示 Decoder input 由几句话组成
     '''
-    def __init__(self, maxlen = 30,
+    def __init__(self, filename,
+                       maxlen = 30,
                        batch_size = 6,
                        max_pred = 5,  # max tokens of prediction
                        n_layers = 6,
@@ -46,15 +68,7 @@ class Bert_premodel_for_NLP(Interface.Interface):
                        d_k = 64,
                        d_v = 64,  # dimension of K(=Q), V
                        n_segments = 2,
-                       input = ('Hello, how are you? I am Romeo.\n'
-                                'Hello, Romeo My name is Juliet. Nice to meet you.\n'
-                                'Nice meet you too. How are you today?\n'
-                                'Great. My baseball team won the competition.\n'
-                                'Oh Congratulations, Juliet\n'
-                                'Thank you Romeo\n'
-                                'Where are you going today?\n'
-                                'I am going shopping. What about you?\n'
-                                'I am going to visit my grandmother. she is not very well')):
+                       ):
         self.maxlen = maxlen
         self.batch_size = batch_size
         self.max_pred = max_pred
@@ -65,13 +79,13 @@ class Bert_premodel_for_NLP(Interface.Interface):
         self.d_k = d_k
         self.d_v = d_v
         self.n_segments = n_segments
-        self.input = input
+        self.filename = filename
 
     def process(self):
-        print('=' * 80)
-        print(self.input)
-        print('=' * 80)
+        print("loading data...")
         self.data_process()
+        print("loading data succeed!")
+        self.make_batch()
         self.model()
         self.optimization()
         self.train()
@@ -124,9 +138,83 @@ class Bert_premodel_for_NLP(Interface.Interface):
                 pass
 
     def data_process(self):
-        self.batch, self.vocab_size, self.word2idx, self.idx2word, self.input_ids,\
-        self.segment_ids, self.masked_tokens, self.masked_pos,\
-        self.isNext, self.loader = bert_dataprocess(self.input, self.batch_size, self.max_pred, self.maxlen)
+        # self.batch, self.vocab_size, self.word2idx, self.idx2word, self.input_ids,\
+        # self.segment_ids, self.masked_tokens, self.masked_pos,\
+        # self.isNext, self.loader = bert_dataprocess(self.input, self.batch_size, self.max_pred, self.maxlen)
+        # self.input = read_file(DATA_ROOT + self.filename)
+        with open(DATA_ROOT + self.filename) as f:
+            self.input = f.read()
+
+        # 数据处理
+        self.sentences = re.sub("[.,!?\\-]", '', self.input.lower()).split('\n')  # filter '.', ',', '?', '!'
+        word_list = list(set(" ".join(self.sentences).split()))  # ['hello', 'how', 'are', 'you',...]
+        self.word2idx = {'[PAD]': 0, '[CLS]': 1, '[SEP]': 2, '[MASK]': 3}
+        for i, w in enumerate(word_list):
+            self.word2idx[w] = i + 4
+        self.idx2word = {i: w for i, w in enumerate(self.word2idx)}
+        self.vocab_size = len(self.word2idx)
+
+        # 存储全部文本每句话对应的word的index，二维
+        self.token_list = list()
+        for sentence in self.sentences:
+            arr = [self.word2idx[s] for s in sentence.split()]
+            self.token_list.append(arr)
+
+    def make_batch(self):
+        self.batch = []
+        positive = negative = 0
+        while positive != self.batch_size / 2 or negative != self.batch_size / 2:
+
+            # 预测下一句
+            tokens_a_index, tokens_b_index = randrange(len(self.sentences)), randrange(
+                len(self.sentences))  # sample random index in sentences
+            tokens_a, tokens_b = self.token_list[tokens_a_index], self.token_list[tokens_b_index]
+            self.input_ids = [self.word2idx['[CLS]']] + tokens_a + [self.word2idx['[SEP]']] + tokens_b + [self.word2idx['[SEP]']]
+            self.segment_ids = [0] * (1 + len(tokens_a) + 1) + [1] * (len(tokens_b) + 1)
+
+            # 完形填空任务
+            n_pred = min(self.max_pred, max(1, int(len(self.input_ids) * 0.15)))  # 15 % of tokens in one sentence
+            cand_maked_pos = [i for i, token in enumerate(self.input_ids)
+                              if token != self.word2idx['[CLS]'] and token != self.word2idx['[SEP]']]  # candidate masked position
+            shuffle(cand_maked_pos)
+            self.masked_tokens, self.masked_pos = [], []
+            for pos in cand_maked_pos[:n_pred]:
+                self.masked_pos.append(pos)
+                self.masked_tokens.append(self.input_ids[pos])
+                if random() < 0.8:  # 80%
+                    self.input_ids[pos] = self.word2idx['[MASK]']  # make mask
+                elif random() > 0.9:  # 10%
+                    index = randint(0, self.vocab_size - 1)  # random index in vocabulary
+                    while index < 4:  # can't involve 'CLS', 'SEP', 'PAD'
+                        index = randint(0, self.vocab_size - 1)
+                    self.input_ids[pos] = index  # replace
+
+            # 使用0进行padding
+            n_pad = self.maxlen - len(self.input_ids)
+            self.input_ids.extend([0] * n_pad)
+            self.segment_ids.extend([0] * n_pad)
+
+            # 是为了补齐 mask 的数量，因为不同句子长度，会导致不同数量的单词进行 mask，我们需要保证同一个 batch 中，mask 的数量（必须）是相同的，
+            if self.max_pred > n_pred:
+                n_pad = self.max_pred - n_pred
+                self.masked_tokens.extend([0] * n_pad)
+                self.masked_pos.extend([0] * n_pad)
+
+            # tokens_a_index + 1 == tokens_b_index代表b是a的下一句
+            if tokens_a_index + 1 == tokens_b_index and positive < self.batch_size / 2:
+                self.batch.append([self.input_ids, self.segment_ids, self.masked_tokens, self.masked_pos, True])  # IsNext
+                positive += 1
+            elif tokens_a_index + 1 != tokens_b_index and negative < self.batch_size / 2:
+                self.batch.append([self.input_ids, self.segment_ids, self.masked_tokens, self.masked_pos, False])  # NotNext
+                negative += 1
+
+        self.input_ids, self.segment_ids, self.masked_tokens, self.masked_pos, self.isNext = zip(*self.batch)
+        self.input_ids, self.segment_ids, self.masked_tokens, self.masked_pos, self.isNext = \
+            torch.LongTensor(self.input_ids), torch.LongTensor(self.segment_ids), torch.LongTensor(self.masked_tokens), \
+            torch.LongTensor(self.masked_pos), torch.LongTensor(self.isNext)
+
+        self.loader = Data.DataLoader(MyDataSet(self.input_ids, self.segment_ids, self.masked_tokens, self.masked_pos, self.isNext), self.batch_size, True)
+
 
     def model(self):
         self.model = Bert(self.d_model, self.n_layers, self.vocab_size, self.maxlen, self.n_segments,
@@ -152,6 +240,8 @@ class Bert_premodel_for_NLP(Interface.Interface):
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+        torch.save(self.model, MODEL_ROOT + 'Bert_premodel_for_NLP.pkl')
+        print("The model has been saved in " + MODEL_ROOT[3:] + 'Bert_premodel_for_NLP.pkl')
 
     def predict(self):
         input_ids, segment_ids, masked_tokens, masked_pos, isNext = self.batch[1]

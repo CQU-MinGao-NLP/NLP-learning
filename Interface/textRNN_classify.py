@@ -156,8 +156,8 @@ class textRNN_classify(Interface.Interface):
         #dict_save(self.vocab, MODEL_ROOT + "textRNN_token2idx.txt")
         self.vocab_size = len(self.vocab)
 
-        def preprocess_imdb(data, vocab):
-            max_l = 500  # 将每条评论通过截断或者补0，使得长度变成500
+        def preprocess_imdb(data, vocab, max_l):
+            # 将每条评论通过截断或者补0，使得长度变成500
 
             def pad(x):
                 return x[:max_l] if len(x) > max_l else x + [0] * (max_l - len(x))
@@ -167,8 +167,8 @@ class textRNN_classify(Interface.Interface):
             labels = torch.tensor([score for _, score in data])
             return features, labels
 
-        self.train_data = preprocess_imdb(train_data, self.vocab)
-        self.test_data = preprocess_imdb(test_data, self.vocab)
+        self.train_data = preprocess_imdb(train_data, self.vocab, self.sequence_length)
+        self.test_data = preprocess_imdb(test_data, self.vocab, self.sequence_length)
 
     def model(self):
         self.textRNN_model = TextRNN(self.embedding_size, self.num_classes, self.num_layers, self.num_hiddens, self.vocab_size)

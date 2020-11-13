@@ -133,15 +133,15 @@ if __name__ == '__main__':
             elif number == 2:
                 test = textCNN_classify(filename=file)
             elif number == 3:
-                test = transformer_translate()
+                test = transformer_translate(filename=file)
             elif number == 4:
                 test = textRNN_classify(filename=file)
             elif number == 5:
                 test = word2vec(filename=file)
             elif number == 6:
-                test = Seq2seq_translate_text()
+                test = Seq2seq_translate_text(filename=file)
             elif number == 7:
-                test = Bert_premodel_for_NLP()
+                test = Bert_premodel_for_NLP(filename=file)
             else:
                 pass
             test.process()

@@ -1,6 +1,8 @@
+import os
 import sys
 import time
 
+from Logistic.dataprocess.Data_process import dict_save
 from Logistic.evaluation.seq2seq_evaluation import evaluate
 
 sys.path.append("..")
@@ -10,7 +12,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy
 from Interface import Interface
-from Logistic.dataprocess.seq2seq_dataprocess import *
+#from Logistic.dataprocess.seq2seq_dataprocess import *
 from Logistic.model.Seq2seq import *
 from torch.utils.data import Dataset, DataLoader
 
@@ -39,8 +41,31 @@ from torch.utils.data import Dataset, DataLoader
     针对随机抽取的十条英语句子翻译成中文句子
 '''
 
+MODEL_ROOT = "../Data/model/Seq2seq_translate_text/"
+DATA_ROOT = "../Data/train_data/"
+
+# 返回分好的{源数据、源数据长度、目标数据、目标数据长度}
+class TranslationDataset(Dataset):
+    def __init__(self, src_data, trg_data):
+        self.src_data = src_data
+        self.trg_data = trg_data
+
+        assert len(src_data) == len(trg_data), \
+            "numbers of src_data  and trg_data must be equal!"    # 表达式为false时执行
+
+    def __len__(self):
+        return len(self.src_data)
+
+    def __getitem__(self, idx):
+        src_sample = self.src_data[idx]
+        src_len = len(self.src_data[idx])
+        trg_sample = self.trg_data[idx]
+        trg_len = len(self.trg_data[idx])
+        return {"src": src_sample, "src_len": src_len, "trg": trg_sample, "trg_len": trg_len}
+
 class Seq2seq_translate_text(Interface.Interface):
-    def __init__(self, BATCH_SIZE = 32,
+    def __init__(self, filename,
+                       BATCH_SIZE = 32,
                        ENC_EMB_DIM = 256,
                        DEC_EMB_DIM = 256,
                        HID_DIM = 512,
@@ -52,8 +77,8 @@ class Seq2seq_translate_text(Interface.Interface):
                        CLIP = 1,
                        bidirectional = True,
                        attn_method = "general",
-                       seed = 2020,
-                       input_data='../datasets/cmn-eng/cmn-1.txt'):
+                       seed = 2020):
+        self.filename = filename
         self.BATCH_SIZE = BATCH_SIZE
         self.ENC_EMB_DIM = ENC_EMB_DIM
         self.DEC_EMB_DIM = DEC_EMB_DIM
@@ -67,19 +92,21 @@ class Seq2seq_translate_text(Interface.Interface):
         self.bidirectional = bidirectional
         self.attn_method = attn_method
         self.seed = seed
-        self.input_data = input_data
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.basic_dict = {'<pad>': 0, '<unk>': 1, '<bos>': 2, '<eos>': 3}
 
     def process(self):
+        print("loading data...")
         self.data_process()
+        print("loading data succeed!")
+        self.make_batch()
         self.model()
         self.optimization()
         self.train()
         self.predict()
 
-def update_parameters(self):
+    def update_parameters(self):
         self.parameters_name_list = ['BATCH_SIZE', 'ENC_EMB_DIM', 'DEC_EMB_DIM', 'HID_DIM','N_LAYERS','ENC_DROPOUT','DEC_DROPOUT','LEARNING_RATE','N_EPOCHS','CLIP']
         self.parameters_list = [self.BATCH_SIZE, self.ENC_EMB_DIM, self.DEC_EMB_DIM, self.HID_DIM, self.N_LAYERS, self.ENC_DROPOUT,self.DEC_DROPOUT,self.LEARNING_RATE,self.N_EPOCHS,self.CLIP]
         parameters_int_list = ['BATCH_SIZE', 'ENC_EMB_DIM', 'DEC_EMB_DIM', 'HID_DIM','N_LAYERS','N_EPOCHS','CLIP'] # 输入为int
@@ -129,8 +156,85 @@ def update_parameters(self):
                 pass
             
     def data_process(self):
+        def seq2seq_dataprocess(input_data):
+            with open(input_data, 'r', encoding='utf-8') as f:
+                data = f.read()
+            data = data.strip()  # 移除头尾空格或换行符
+            data = data.split('\n')
+
+            print('samples number:\n', len(data))
+            '''
+            >>>print('样本示例:\n', data[0])
+            样本数:
+              2000
+            样本示例:
+              Hi.	嗨。	CC-BY 2.0 (France) Attribution: tatoeba.org #538123 (CM) & #891077 (Martha)
+            '''
+
+            # 分割英文数据和中文数据，英文数据和中文数据间使用\t也就是tab隔开
+            en_data = [line.split('\t')[0] for line in data]
+            ch_data = [line.split('\t')[1] for line in data]
+            '''
+            >>>print('\n英文数据:\n', en_data[:10])
+            >>>print('中文数据:\n', ch_data[:10])
+            英文数据:
+             ['Hi.', 'Hi.', 'Run.', 'Wait!', 'Wait!', 'Hello!', 'I won!', 'Oh no!', 'Cheers!', 'Got it?']
+            中文数据:
+             ['嗨。', '你好。', '你用跑的。', '等等！', '等一下！', '你好。', '我赢了。', '不会吧。', '乾杯!', '你懂了吗？']
+            '''
+
+            # 按字符级切割，并添加<eos>
+            en_token_list = [[char for char in line] + ["<eos>"] for line in en_data]
+            ch_token_list = [[char for char in line] + ["<eos>"] for line in ch_data]
+            '''
+            >>>print('\n英文数据:\n', en_token_list[:3])
+            >>>print('中文数据:\n', ch_token_list[:3])
+            英文数据:
+              [['H', 'i', '.', '<eos>'], ['H', 'i', '.', '<eos>'], ['R', 'u', 'n', '.', '<eos>']
+            中文数据:
+              [['嗨', '。', '<eos>'], ['你', '好', '。', '<eos>'], ['你', '用', '跑', '的', '。', '<eos>'],
+            '''
+
+            # 基本字典
+            basic_dict = {'<pad>': 0, '<unk>': 1, '<bos>': 2, '<eos>': 3}
+            # 分别生成中英文字符级字典
+            en_vocab = set(''.join(en_data))  # 把所有英文句子串联起来，得到[HiHiRun.....],然后去重[HiRun....]
+            en2id = {char: i + len(basic_dict) for i, char in enumerate(en_vocab)}  # enumerate 遍历函数
+            en2id.update(basic_dict)  # 将basic字典添加到英文字典
+            id2en = {v: k for k, v in en2id.items()}
+
+            # 分别生成中英文字典
+            ch_vocab = set(''.join(ch_data))
+            ch2id = {char: i + len(basic_dict) for i, char in enumerate(ch_vocab)}
+            ch2id.update(basic_dict)
+            id2ch = {v: k for k, v in ch2id.items()}
+
+            # 利用字典，映射数据--字符级别映射（例如Hi.<eos>-->[47, 4, 32, 3]
+            en_num_data = [[en2id[en] for en in line] for line in en_token_list]
+            ch_num_data = [[ch2id[ch] for ch in line] for line in ch_token_list]
+            '''
+            >>>print('\nchar:', en_data[3])
+            >>>print('index:', en_num_data[3])
+            char: Wait!
+            index: [15, 39, 11, 34, 46, 3]
+            '''
+
+            # 得到处理好的训练数据，包含源英文，源英文长度，目标中文和目标中文长度
+            train_set = TranslationDataset(en_num_data, ch_num_data)
+
+            return en2id, id2en, ch2id, id2ch, en_num_data, ch_num_data, train_set
         self.en2id, self.id2en, self.ch2id, self.id2ch, self.en_num_data, self.ch_num_data, self.train_set = \
-                 seq2seq_dataprocess(self.input_data)
+                 seq2seq_dataprocess(DATA_ROOT+self.filename)
+
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
+        dict_save(self.en2id, MODEL_ROOT + "Seq2seq_translate_text_en2id.txt")
+        dict_save(self.id2en, MODEL_ROOT + "Seq2seq_translate_text_id2en.txt")
+        dict_save(self.ch2id, MODEL_ROOT + "Seq2seq_translate_text_ch2id.txt")
+        dict_save(self.id2ch, MODEL_ROOT + "Seq2seq_translate_text_id2ch.txt")
+
+
+    def make_batch(self):
         self.train_loader = DataLoader(self.train_set, batch_size=self.BATCH_SIZE, collate_fn=self.padding_batch)
 
     def model(self):
@@ -159,13 +263,14 @@ def update_parameters(self):
 
             if self.valid_loss < self.best_valid_loss:
                 self.best_valid_loss = self.valid_loss
-                torch.save(self.model.state_dict(), "../model/en2ch-attn-model.pt")
+                torch.save(self.model, MODEL_ROOT + 'Seq2seq_translate_text.pkl')
+
 
             if epoch % 2 == 0:
                 epoch_mins, epoch_secs = self.epoch_time(self.start_time, self.end_time)
                 print(f'Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s')
                 print(f'\tTrain Loss: {self.train_loss:.3f} | Val. Loss: {self.valid_loss:.3f}')
-
+        print("The model has been saved in " + MODEL_ROOT[3:] + 'Seq2seq_translate_text.pkl')
         print("best valid loss：", self.best_valid_loss)
 
 

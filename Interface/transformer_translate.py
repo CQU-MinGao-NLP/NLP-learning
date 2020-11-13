@@ -8,6 +8,7 @@ import numpy as np
 from Interface import Interface
 from Logistic.dataprocess.get_dictionary_and_num import *
 from Logistic.model.transformer import Transformer
+from torch.utils.data import Dataset, DataLoader
 '''
 功能：
     使用transformer进行机器翻译
@@ -21,20 +22,25 @@ from Logistic.model.transformer import Transformer
     [6]n_heads = 8  # number of heads in Multi-Head Attention   mul-head attention的头数
 '''
 
+MODEL_ROOT = "../Data/model/transformer_translate/"
+DATA_ROOT = "../Data/train_data/"
+
 class transformer_translate(Interface.Interface):
     def __init__(self, \
-                input_data = ['ich mochte ein bier P', 'S i want a beer', 'i want a beer E'],\
-                src_vocab = {'P': 0, 'ich': 1, 'mochte': 2, 'ein': 3, 'bier': 4}, \
-                tgt_vocab = {'P': 0, 'i': 1, 'want': 2, 'a': 3, 'beer': 4, 'S': 5, 'E': 6},\
-                src_len = 5, tgt_len = 5, d_model = 512, d_ff = 2048, d_k = 64, d_v = 64, n_layers = 6, n_heads = 8):
+                # input_data = ['ich mochte ein bier P', 'S i want a beer', 'i want a beer E'],\
+                # src_vocab = {'P': 0, 'ich': 1, 'mochte': 2, 'ein': 3, 'bier': 4}, \
+                # tgt_vocab = {'P': 0, 'i': 1, 'want': 2, 'a': 3, 'beer': 4, 'S': 5, 'E': 6},\
+                filename,
+                src_len = 10, tgt_len = 10, d_model = 512, d_ff = 2048, d_k = 64, d_v = 64, n_layers = 6, n_heads = 8):
         #super(Interface, self).__init__()
-        self.input_data = input_data
-        
-        self.src_vocab = src_vocab
-        self.src_vocab_size = len(src_vocab)
-        self.tgt_vocab = tgt_vocab
-        self.number_dict = {i: w for i, w in enumerate(tgt_vocab)}
-        self.tgt_vocab_size = len(tgt_vocab)
+        # self.input_data = input_data
+
+        self.filename = filename
+        # self.src_vocab = src_vocab
+        # self.src_vocab_size = len(src_vocab)
+        # self.tgt_vocab = tgt_vocab
+        # self.number_dict = {i: w for i, w in enumerate(tgt_vocab)}
+        # self.tgt_vocab_size = len(tgt_vocab)
 
         self.src_len = src_len
         self.tgt_len = tgt_len
@@ -45,11 +51,14 @@ class transformer_translate(Interface.Interface):
         self.d_v = d_v
         self.n_layers = n_layers
         self.n_heads = n_heads
+        self.batch_size = 32
 
     # 控制流程
     def process(self):
-        #self.data_process()
-        self.enc_inputs, self.dec_inputs, self.target_batch = self.make_batch(self.input_data)
+        print("loading data...")
+        self.data_process()
+        print("loading data succeed!")
+        self.make_batch()
         self.update_parameters()
         self.model()
         self.optimization()
@@ -103,20 +112,57 @@ class transformer_translate(Interface.Interface):
                 print("wrong input, please input again！")
                 pass
 
-    # 将数据分为前N-1个词（input_batch）和所需预测的第N个词（target_batch）
-    def make_batch(self, input_data):
-        input_batch = [[self.src_vocab[n] for n in self.input_data[0].split()]]
-        output_batch = [[self.tgt_vocab[n] for n in self.input_data[1].split()]]
-        target_batch = [[self.tgt_vocab[n] for n in self.input_data[2].split()]]
-        return torch.LongTensor(input_batch), torch.LongTensor(output_batch), torch.LongTensor(target_batch)
-
     def data_process(self):
-        # 得到词典，获取词典数目
-        self.word_dict, self.number_dict, self.vocab_size = get_dictionary_and_num(self.input_data)
 
+        with open(DATA_ROOT+self.filename, 'r', encoding='utf-8') as f:
+            data = f.read()
+        data = data.strip()  # 移除头尾空格或换行符
+        data = data.split('\n')
+
+        print('samples number:\n', len(data))
+
+        # 分割源数据和目标数据，源数据和目标数据间使用\t也就是tab隔开(string)
+        input_data = [line.split('\t')[0] for line in data]
+        output_data = [line.split('\t')[1] for line in data]
+        target_data = [line.split('\t')[1] for line in data]
+
+        def pad(x, max_l):
+            return x[:max_l] if len(x) > max_l else x + [0] * (max_l - len(x))
+
+        # 按词级切割，并添加<eos> (word)
+        input_list = [pad([word for word in line.split(" ")], self.src_len - 1) + ["<pad>"] for line in input_data]
+        output_list = [["<bos>"] + pad([word for word in line.split(" ")], self.tgt_len - 1) for line in output_data]
+        target_list = [pad([word for word in line.split(" ")] + ["<eos>"], self.tgt_len) for line in target_data]
+
+        # 基本字典
+        basic_dict = {'<pad>': 0, '<unk>': 1, '<bos>': 2, '<eos>': 3}
+        # 分别生成中英文字符级字典
+        en_vocab = set(word for sen in input_list for word in sen)  # 把所有英文句子串联起来，得到[HiHiRun.....],然后去重[HiRun....]
+        en2id = {char: i + len(basic_dict) for i, char in enumerate(en_vocab)}  # enumerate 遍历函数
+        en2id.update(basic_dict)  # 将basic字典添加到英文字典
+        id2en = {v: k for k, v in en2id.items()}
+
+        # 分别生成中英文字典
+        ch_vocab = set(word for sen in target_list for word in sen)
+        ch2id = {char: i + len(basic_dict) for i, char in enumerate(ch_vocab)}
+        ch2id.update(basic_dict)
+        id2ch = {v: k for k, v in ch2id.items()}
+
+        # 利用字典，映射数据--字符级别映射（例如Hi.<eos>-->[47, 4, 32, 3]
+        en_num_data = [[en2id[en] for en in line] for line in input_list]
+        ch_num_data_dec_input = [[ch2id[ch] for ch in line] for line in output_list]
+        ch_num_data_dec_output = [[ch2id[ch] for ch in line] for line in target_list]
+
+        self.train_set = torch.utils.data.TensorDataset(torch.tensor(en_num_data), torch.tensor(ch_num_data_dec_input), torch.tensor(ch_num_data_dec_output))
+        self.src_vocab_size = len(en2id)
+        self.tgt_vocab_size = len(ch2id)
+
+
+    def make_batch(self):
+        self.train_loader = DataLoader(self.train_set, batch_size=self.batch_size)
 
     def model(self):
-        self.transformer_model = Transformer(self.src_len , self.tgt_len, self.d_model, self.d_ff, self.d_k, self.d_v, self.n_layers, self.n_heads\
+        self.transformer_model = Transformer(self.src_len, self.tgt_len, self.d_model, self.d_ff, self.d_k, self.d_v, self.n_layers, self.n_heads\
             , self.src_vocab_size, self.tgt_vocab_size)
 
 
@@ -128,11 +174,15 @@ class transformer_translate(Interface.Interface):
         print('start train!')
         for epoch in range(20):
             self.optimizer.zero_grad()
-            self.outputs, self.enc_self_attns, self.dec_self_attns, self.dec_enc_attns = self.transformer_model(self.enc_inputs, self.dec_inputs)
-            loss = self.criterion(self.outputs, self.target_batch.contiguous().view(-1))
+            for enc_inputs, dec_inputs, dec_output in self.train_loader:
+                self.outputs, self.enc_self_attns, self.dec_self_attns, self.dec_enc_attns = self.transformer_model(enc_inputs, dec_inputs)
+                loss = self.criterion(self.outputs, dec_output.contiguous().view(-1))
+                loss.backward()
+                self.optimizer.step()
             print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.6f}'.format(loss))
-            loss.backward()
-            self.optimizer.step()
+
+        torch.save(self.transformer_model, MODEL_ROOT + 'transformer_translate.pkl')
+        print("The model has been saved in " + MODEL_ROOT[3:] + 'transformer_translate.pkl')
 
     def predict(self):
         pass
