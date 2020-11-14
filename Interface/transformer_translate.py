@@ -181,6 +181,8 @@ class transformer_translate(Interface.Interface):
                 self.optimizer.step()
             print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.6f}'.format(loss))
 
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
         torch.save(self.transformer_model, MODEL_ROOT + 'transformer_translate.pkl')
         print("The model has been saved in " + MODEL_ROOT[3:] + 'transformer_translate.pkl')
 

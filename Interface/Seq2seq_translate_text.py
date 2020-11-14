@@ -253,6 +253,8 @@ class Seq2seq_translate_text(Interface.Interface):
     def train(self):
         print('start train!')
 
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
         self.best_valid_loss = float('inf')
         for epoch in range(self.N_EPOCHS):
 

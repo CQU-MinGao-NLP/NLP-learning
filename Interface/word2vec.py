@@ -245,6 +245,8 @@ class word2vec(Interface.Interface):
             print('epoch %d, loss %.2f, time %.2fs'
                 % (epoch + 1, l_sum / n, time.time() - start))
 
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
         torch.save(self.word2vec_net, MODEL_ROOT+'word2vec.pkl')
         print("The model has been saved in "+ MODEL_ROOT[3:]+'word2vec.pkl')
 

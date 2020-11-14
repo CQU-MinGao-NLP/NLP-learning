@@ -165,6 +165,8 @@ class NNLM_predict_next_word(Interface.Interface):
             loss.backward()
             self.optimizer.step()
 
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
         torch.save(self.NNLM_model, MODEL_ROOT + 'NNLM_predict_next_word.pkl')
         print("The model has been saved in " + MODEL_ROOT[3:] + 'NNLM_predict_next_word.pkl')
 

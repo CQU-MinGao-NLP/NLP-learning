@@ -21,6 +21,7 @@ from Logistic.dataprocess.get_tokenized import *
 from Logistic.model.textRNN import TextRNN
 from Logistic.dataprocess.Data_process import *
 from Logistic.dataprocess.get_dictionary_and_num import *
+from Logistic.dataprocess.Data_process import dict_save
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -53,7 +54,7 @@ class textRNN_classify(Interface.Interface):
         self.num_layers = num_layers
         self.num_hiddens = num_hiddens
         self.learning_rate = 0.01
-        self.num_epochs = 5
+        self.num_epochs = 2
         self.batch_size = 64
         self.just_test = just_test
 
@@ -153,7 +154,16 @@ class textRNN_classify(Interface.Interface):
             return Vocab.Vocab(counter, min_freq=5)
 
         self.vocab = get_vocab_imdb(tokenized_data)
+        self.idx_to_token = {self.vocab.stoi[tk]: tk for tk in self.vocab.itos if tk != '\n'}
+        self.token_to_idx = {tk: idx for idx, tk in self.idx_to_token.items()}
+
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
+        dict_save(self.token_to_idx, MODEL_ROOT + "textRNN_token2idx.txt")
+        dict_save(self.idx_to_token, MODEL_ROOT + "textRNN_idx2token.txt")
+
         #dict_save(self.vocab, MODEL_ROOT + "textRNN_token2idx.txt")
+
         self.vocab_size = len(self.vocab)
 
         def preprocess_imdb(data, vocab, max_l):
@@ -220,7 +230,9 @@ class textRNN_classify(Interface.Interface):
             print('epoch %d, loss %.4f, train acc %.3f, test acc %.3f, time %.1f sec'
                 % (epoch + 1, train_l_sum / batch_count, train_acc_sum / n, test_acc, time.time() - start))
 
-        torch.save(self.textRNN_model, DATA_ROOT+'/model/textRNN_model.pkl')
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
+        torch.save(self.textRNN_model, MODEL_ROOT +'textRNN_model.pkl')
         print("The model has been saved in " + MODEL_ROOT[3:] + 'textRNN_model.pkl')
 
     def evaluate_accuracy(self, data_iter, net, device=None):

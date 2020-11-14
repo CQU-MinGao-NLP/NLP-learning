@@ -1,5 +1,5 @@
 import sys
-
+import os
 import fasttext
 
 sys.path.append("..")
@@ -10,6 +10,7 @@ import torch.optim as optim
 import numpy
 from Interface import Interface
 import warnings
+from Logistic.dataprocess.Data_process import *
 warnings.filterwarnings("ignore")
 
 '''
@@ -27,9 +28,12 @@ warnings.filterwarnings("ignore")
     给测试集的每段文本进行分类
 '''
 
+MODEL_ROOT = "../Data/model/fasttext_classify/"
+DATA_ROOT = "../Data/train_data/"
+
 class FastText_classify_text(Interface.Interface):
-    def __init__(self, input = '../datasets/text-classify/text_classify_train.txt', lr=0.2, dim=100, epoch=500, word_ngrams=4, loss='softmax'):
-        self.input = input
+    def __init__(self, filename, lr=0.2, dim=100, epoch=500, word_ngrams=4, loss='softmax'):
+        self.filename = filename
         self.lr = lr
         self.dim = dim
         self.epoch = epoch
@@ -38,9 +42,32 @@ class FastText_classify_text(Interface.Interface):
 
     # 控制流程
     def process(self):
+        print("loading data...")
+        self.data_process()
+        print("loading data succeed!")
         self.update_parameters()
         self.model()
-        self.predict()
+        # self.predict()
+
+    def data_process(self):
+        assert self.filename in os.listdir(DATA_ROOT)
+
+        
+        data = read_file(DATA_ROOT+self.filename)
+        
+        print(DATA_ROOT + self.filename[:-4] + '_Fasttext.txt')
+        with open(DATA_ROOT + self.filename[:-4] + '_Fasttext.txt', 'w', encoding="UTF-8") as f:
+            for line in data:
+                line = line.strip().split(' ')
+                f.write('__label__')
+                f.write(line[0])
+                f.write(' , ')
+                for i in line[1:]:
+                    f.write(i)
+                    f.write(' ')
+                f.write('\n')
+
+
 
     def update_parameters(self):
         self.parameters_name_list = ['lr', 'dim', 'epoch', 'word_ngrams']
@@ -88,13 +115,12 @@ class FastText_classify_text(Interface.Interface):
                 print("wrong input, please input again！")
                 pass
 
-    def data_process(self):
-        pass
-
 
     def model(self):
-        self.FastText_model = fasttext.train_supervised(self.input, lr=self.lr, dim=self.dim, epoch=self.epoch, word_ngrams=self.word_ngrams, loss=self.loss)
-        self.FastText_model.save_model('../model/fasttext_model_file.bin')
+        self.FastText_model = fasttext.train_supervised(DATA_ROOT + self.filename[:-4] + '_Fasttext.txt', lr=self.lr, dim=self.dim, epoch=self.epoch, word_ngrams=self.word_ngrams, loss=self.loss)
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
+        self.FastText_model.save_model(MODEL_ROOT + 'fasttext_model_file.bin')
 
 
     def optimization(self):

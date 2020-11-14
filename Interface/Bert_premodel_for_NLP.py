@@ -1,3 +1,4 @@
+import os
 import re
 from random import randrange, shuffle, random, randint
 
@@ -10,6 +11,7 @@ from Logistic.dataprocess.Data_process import read_file
 from Logistic.dataprocess.bert_dataprocess import bert_dataprocess
 from Logistic.model.Bert import Bert
 import torch.utils.data as Data
+from Logistic.dataprocess.Data_process import dict_save
 
 '''
 功能：
@@ -85,11 +87,12 @@ class Bert_premodel_for_NLP(Interface.Interface):
         print("loading data...")
         self.data_process()
         print("loading data succeed!")
+        self.update_parameters()
         self.make_batch()
         self.model()
         self.optimization()
         self.train()
-        self.predict()
+        # self.predict()
 
     def update_parameters(self):
         self.parameters_name_list = ['maxlen', 'batch_size', 'max_pred', 'n_layers','n_heads','d_model','d_ff','d_k','d_v','n_segments']
@@ -153,6 +156,11 @@ class Bert_premodel_for_NLP(Interface.Interface):
             self.word2idx[w] = i + 4
         self.idx2word = {i: w for i, w in enumerate(self.word2idx)}
         self.vocab_size = len(self.word2idx)
+
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
+        dict_save(self.idx2word, MODEL_ROOT + "Bert_idx2token.txt")
+        dict_save(self.word2idx, MODEL_ROOT + "Bert_token2idx.txt")
 
         # 存储全部文本每句话对应的word的index，二维
         self.token_list = list()
@@ -240,6 +248,9 @@ class Bert_premodel_for_NLP(Interface.Interface):
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+        
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
         torch.save(self.model, MODEL_ROOT + 'Bert_premodel_for_NLP.pkl')
         print("The model has been saved in " + MODEL_ROOT[3:] + 'Bert_premodel_for_NLP.pkl')
 

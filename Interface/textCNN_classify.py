@@ -48,8 +48,8 @@ class textCNN_classify(Interface.Interface):
         self.filter_sizes = filter_sizes
         self.num_filters = num_filters
         self.learning_rate = 0.01
-        self.num_epochs = 5
-        self.batch_size = 6
+        self.num_epochs = 2
+        self.batch_size = 10
 
     # 控制流程
     def process(self):
@@ -119,8 +119,8 @@ class textCNN_classify(Interface.Interface):
             data = read_file(data_root)
             train_data = []
             test_data =[]
-            Train_data = np.random.choice(data, int(len(data)*0.7), replace = False)
-            Test_data = [i for i in data if i not in Train_data]
+            Test_data = np.random.choice(data, int(len(data)*0.3), replace = False)
+            Train_data = [i for i in data if i not in Test_data]
             for temp in Train_data:
                 train_data.append([temp[2:], int(temp[0])])
             for temp in Test_data:
@@ -139,8 +139,15 @@ class textCNN_classify(Interface.Interface):
         self.vocab = get_vocab_imdb(tokenized_data)
         self.vocab_size = len(self.vocab)
 
-        def preprocess_imdb(data, vocab):
-            max_l = 500  # 将每条评论通过截断或者补0，使得长度变成500
+        self.idx_to_token = {self.vocab.stoi[tk]: tk for tk in self.vocab.itos if tk != '\n'}
+        self.token_to_idx = {tk: idx for idx, tk in self.idx_to_token.items()}
+        
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
+        dict_save(self.token_to_idx, MODEL_ROOT + "textCNN_token2idx.txt")
+        dict_save(self.idx_to_token, MODEL_ROOT + "textCNN_idx2token.txt")
+        
+        def preprocess_imdb(data, vocab, max_l):
 
             def pad(x):
                 return x[:max_l] if len(x) > max_l else x + [0] * (max_l - len(x))
@@ -150,14 +157,10 @@ class textCNN_classify(Interface.Interface):
             labels = torch.tensor([score for _, score in data])
             return features, labels
 
-        self.train_data = preprocess_imdb(train_data, self.vocab)
-        self.test_data = preprocess_imdb(test_data, self.vocab)
+        self.train_data = preprocess_imdb(train_data, self.vocab, self.sequence_length)
+        
+        self.test_data = preprocess_imdb(test_data, self.vocab, self.sequence_length)
 
-        #self.word_dict, self.number_dict, self.vocab_size = get_dictionary_and_num(self.train_data[0])
-        #if os.path.exists(MODEL_ROOT) == False:
-        #    os.mkdir(MODEL_ROOT)
-        #dict_save(self.number_dict, MODEL_ROOT + "textCNN_classify_idx2token.txt")
-        #dict_save(self.word_dict, MODEL_ROOT + "textCNN_classify_token2idx.txt")
 
     def make_batch(self):
         train_set = Data.TensorDataset(*self.train_data)
@@ -216,7 +219,10 @@ class textCNN_classify(Interface.Interface):
             test_acc = self.evaluate_accuracy(self.test_iter, self.textCNN_model)
             print('epoch %d, loss %.4f, train acc %.3f, test acc %.3f, time %.1f sec'
                   % (epoch + 1, train_l_sum / batch_count, train_acc_sum / n, test_acc, time.time() - start))
-        torch.save(self.textCNN_model, DATA_ROOT+'/model/textCNN_model.pkl')
+        
+        if os.path.exists(MODEL_ROOT) == False:
+            os.mkdir(MODEL_ROOT)
+        torch.save(self.textCNN_model, MODEL_ROOT + 'textCNN_model.pkl')
         print("The model has been saved in " + MODEL_ROOT[3:] + 'textCNN_model.pkl')
 
     def evaluate_accuracy(self, data_iter, net, device=None):

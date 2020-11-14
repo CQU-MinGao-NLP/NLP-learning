@@ -283,7 +283,8 @@ def dict_load(path):
     dict = {}
     for line in data:
         line = line.strip().split(" ")
-        dict[line[0]] = line[1]
+        if len(line) >= 2:
+            dict[line[0]] = line[1]
 
     return dict
 

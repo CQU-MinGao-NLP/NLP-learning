@@ -28,12 +28,9 @@ data_process_dict = {"1": "en_tokenizer",  "2": "cn_tokenizer", "3": "en_stopwor
 
 train_model_dict = {"1": 'NNLM_predict_next_word', "2": 'textCNN_classify', "3": 'transformer_translate',
                     "4": 'textRNN_classify', "5": 'word2vec', "6": 'Seq2seq_translate_text',
-                    "7": 'Bert_premodel_for_NLP'}
+                    "7": 'Bert_premodel_for_NLP', "8": 'FastText_classify_text'}
 
-test_model_dict = {"1": 'NNLM_predict_next_word', "2": 'textCNN_classify', "3": 'transformer_translate',
-                   "4": 'textRNN_classify', "5": 'word2vec', "6": 'Elmo',
-                   "7": 'FastText_classify_text', "8": 'Seq2seq_translate_text', "9": 'Bert_premodel_for_NLP'}
-
+test_model_dict = {'1': ['embedding', {'1': 'word2vec', '2': 'elmo', "3": 'bert'}], '2':['classify', {"1": 'textRNN',"2": 'textCNN', "3": 'fasttext'}], '3':['translation', {"1": 'seq2seq', "2": 'transformer'}], '4': ['generation', {"1": 'NNLM'}]}
 
 # 开始界面
 def start():
@@ -82,7 +79,7 @@ def train_choose():
     print('(example: if you input 1 with <enter>, you will run NNLM)')
     print('1. NNLM_predict_next_word(sample)    2. textCNN_classify           3. transformer_translate')
     print('4. textRNN_classify                  5. word2vec                   6. Seq2seq_translate_text')
-    print('7. Bert_premodel_for_NLP')
+    print('7. Bert_premodel_for_NLP             8. FastText_classify_text')
     print('*'*80)
     try:
         number = loop_legal(input(), 1, max_value=len(train_model_dict))
@@ -110,17 +107,22 @@ if __name__ == '__main__':
             print('*' * 80)
             print("Use Trained Model to Predict!")
             print("please input the type of task:")
-            print("1: embedding    2: classify")
-            number = int(loop_legal(input(), 1, max_value=2))
-            if number == 1:
-                print("please input model id:")
-                print("1: word2vec")
-                number = int(loop_legal(input(), 1, max_value=1))
-                if number == 1:
-                    print('please input the filename:')
-                    file = loop_legal(input(), 2, path=test_data_root)
-                    model = Model_test(1, 1, filename=file)
-                    model.process()
+            print(test_model_dict)
+            # for key in test_model_dict:
+            for key, value in test_model_dict.items():
+                print(key + ': ' + value[0])
+            task_id = int(loop_legal(input(), 1, max_value=len(test_model_dict.keys())))
+
+            print("you choose " + test_model_dict[str(task_id)][0] + ", please input model id:")
+            
+            for key, value in test_model_dict[str(task_id)][1].items():
+                print(key + ': ' + value)
+
+            model_id = int(loop_legal(input(), 1, max_value=len(test_model_dict[str(task_id)][1])))
+            
+            file = loop_legal(input('please input the filename, assert that your file is in \"Data/test_data\" \n'), 2, path=test_data_root)
+            model = Model_test(task_id, model_id, test_model_dict, filename=file)
+            model.process()
 
         elif system_number == 3:
             train_data_root = "../Data/train_data/"
@@ -142,6 +144,8 @@ if __name__ == '__main__':
                 test = Seq2seq_translate_text(filename=file)
             elif number == 7:
                 test = Bert_premodel_for_NLP(filename=file)
+            elif number == 8:
+                test = FastText_classify_text(filename=file)
             else:
                 pass
             test.process()
