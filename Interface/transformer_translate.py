@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.append("..") 
 
 import torch
@@ -7,8 +8,10 @@ import torch.optim as optim
 import numpy as np
 from Interface import Interface
 from Logistic.dataprocess.get_dictionary_and_num import *
+from Logistic.dataprocess.Data_process import dict_save
 from Logistic.model.transformer import Transformer
 from torch.utils.data import Dataset, DataLoader
+from Logistic.dataprocess.Data_process import *
 '''
 功能：
     使用transformer进行机器翻译
@@ -51,8 +54,8 @@ class transformer_translate(Interface.Interface):
         self.d_v = d_v
         self.n_layers = n_layers
         self.n_heads = n_heads
-        self.batch_size = 32
-
+        self.batch_size = 3
+        self.num_epochs = 2
     # 控制流程
     def process(self):
         print("loading data...")
@@ -64,7 +67,7 @@ class transformer_translate(Interface.Interface):
         self.optimization()
         self.train()
         #self.predict()
-        self.test()
+        #self.test()
 
     def update_parameters(self):
         self.parameters_name_list = ['src_len', 'tgt_len', 'd_model', 'd_ff','d_k','d_v','n_layers','n_heads']
@@ -127,27 +130,40 @@ class transformer_translate(Interface.Interface):
         target_data = [line.split('\t')[1] for line in data]
 
         def pad(x, max_l):
-            return x[:max_l] if len(x) > max_l else x + [0] * (max_l - len(x))
+            return x[:max_l] if len(x) > max_l else x + ["<pad>"] * (max_l - len(x))
 
         # 按词级切割，并添加<eos> (word)
-        input_list = [pad([word for word in line.split(" ")], self.src_len - 1) + ["<pad>"] for line in input_data]
-        output_list = [["<bos>"] + pad([word for word in line.split(" ")], self.tgt_len - 1) for line in output_data]
-        target_list = [pad([word for word in line.split(" ")] + ["<eos>"], self.tgt_len) for line in target_data]
+        input_corpus = [en_tokenizer([line])[0] for line in input_data]
+        output_corpus = [cn_tokenizer([line])[0] for line in output_data]
+        target_corpus = [cn_tokenizer([line])[0] for line in target_data]
 
         # 基本字典
         basic_dict = {'<pad>': 0, '<unk>': 1, '<bos>': 2, '<eos>': 3}
         # 分别生成中英文字符级字典
-        en_vocab = set(word for sen in input_list for word in sen)  # 把所有英文句子串联起来，得到[HiHiRun.....],然后去重[HiRun....]
+        
+        en_vocab = set(word for sen in input_corpus for word in sen)  # 把所有英文句子串联起来，得到[HiHiRun.....],然后去重[HiRun....]
+        
         en2id = {char: i + len(basic_dict) for i, char in enumerate(en_vocab)}  # enumerate 遍历函数
         en2id.update(basic_dict)  # 将basic字典添加到英文字典
         id2en = {v: k for k, v in en2id.items()}
 
         # 分别生成中英文字典
-        ch_vocab = set(word for sen in target_list for word in sen)
+        ch_vocab = set(word for sen in target_corpus for word in sen)
+        # print('len_chvocab', len(list(ch_vocab)))
         ch2id = {char: i + len(basic_dict) for i, char in enumerate(ch_vocab)}
         ch2id.update(basic_dict)
         id2ch = {v: k for k, v in ch2id.items()}
 
+        if os.path.exists(MODEL_ROOT) == False: 
+            os.mkdir(MODEL_ROOT)
+        dict_save(en2id, MODEL_ROOT + "transformer_translate_en2id.txt")
+        dict_save(id2en, MODEL_ROOT + "transformer_translate_id2en.txt")
+        dict_save(ch2id, MODEL_ROOT + "transformer_translate_ch2id.txt")
+        dict_save(id2ch, MODEL_ROOT + "transformer_translate_id2ch.txt")
+
+        input_list = [pad(en_tokenizer([line])[0]  + ["<pad>"], self.src_len) for line in input_data]
+        output_list = [["<bos>"] + pad(cn_tokenizer([line])[0], self.tgt_len - 1) for line in output_data]
+        target_list = [pad(cn_tokenizer([line])[0] + ["<eos>"], self.tgt_len) for line in target_data]
         # 利用字典，映射数据--字符级别映射（例如Hi.<eos>-->[47, 4, 32, 3]
         en_num_data = [[en2id[en] for en in line] for line in input_list]
         ch_num_data_dec_input = [[ch2id[ch] for ch in line] for line in output_list]
@@ -156,6 +172,8 @@ class transformer_translate(Interface.Interface):
         self.train_set = torch.utils.data.TensorDataset(torch.tensor(en_num_data), torch.tensor(ch_num_data_dec_input), torch.tensor(ch_num_data_dec_output))
         self.src_vocab_size = len(en2id)
         self.tgt_vocab_size = len(ch2id)
+        # print('len(en2id)', len(en2id))
+        # print('len(ch2id)', len(ch2id))
 
 
     def make_batch(self):
@@ -172,9 +190,14 @@ class transformer_translate(Interface.Interface):
 
     def train(self):
         print('start train!')
-        for epoch in range(20):
+        for epoch in range(self.num_epochs):
             self.optimizer.zero_grad()
             for enc_inputs, dec_inputs, dec_output in self.train_loader:
+                # print(enc_inputs)
+                # print(dec_inputs)
+                # print(dec_output)
+                # print(self.src_vocab_size)
+                # print(self.tgt_vocab_size)
                 self.outputs, self.enc_self_attns, self.dec_self_attns, self.dec_enc_attns = self.transformer_model(enc_inputs, dec_inputs)
                 loss = self.criterion(self.outputs, dec_output.contiguous().view(-1))
                 loss.backward()

@@ -73,7 +73,7 @@ class Seq2seq_translate_text(Interface.Interface):
                        ENC_DROPOUT = 0.5,
                        DEC_DROPOUT = 0.5,
                        LEARNING_RATE = 1e-4,
-                       N_EPOCHS = 20,
+                       N_EPOCHS = 5,
                        CLIP = 1,
                        bidirectional = True,
                        attn_method = "general",
@@ -100,11 +100,12 @@ class Seq2seq_translate_text(Interface.Interface):
         print("loading data...")
         self.data_process()
         print("loading data succeed!")
+        self.update_parameters()
         self.make_batch()
         self.model()
         self.optimization()
         self.train()
-        self.predict()
+        # self.predict()
 
     def update_parameters(self):
         self.parameters_name_list = ['BATCH_SIZE', 'ENC_EMB_DIM', 'DEC_EMB_DIM', 'HID_DIM','N_LAYERS','ENC_DROPOUT','DEC_DROPOUT','LEARNING_RATE','N_EPOCHS','CLIP']

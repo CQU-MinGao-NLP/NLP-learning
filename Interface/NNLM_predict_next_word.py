@@ -14,6 +14,7 @@ import numpy
 from Interface import Interface
 from Logistic.dataprocess.get_dictionary_and_num import *
 from Logistic.model.NNLM import NNLM
+from Logistic.dataprocess.Data_process import en_tokenizer
 '''
 功能：
     使用NNLM模型，利用前N-1个word预测第N个word
@@ -60,8 +61,8 @@ class NNLM_predict_next_word(Interface.Interface):
     def data_process(self):
         with open(DATA_ROOT + self.filename, 'r') as f:
             lines = f.readlines()
-            raw_dataset = [st.split() for st in lines]
-
+            # raw_dataset = [st.split() for st in lines]
+            raw_dataset = en_tokenizer(lines)
         for line in raw_dataset:
             length = len(line)
             if length < (self.n_step+1):
@@ -70,6 +71,7 @@ class NNLM_predict_next_word(Interface.Interface):
                 self.input_data.append(line[i:(i+self.n_step+1)])
         # 得到词典，获取词典数目
         self.word_dict, self.number_dict, self.n_class = get_dictionary_and_num(self.input_data)
+        
         if os.path.exists(MODEL_ROOT) == False:
             os.mkdir(MODEL_ROOT)
         dict_save(self.number_dict, MODEL_ROOT + "NNLM_predict_next_word_idx2token.txt")
