@@ -8,7 +8,7 @@ Member:
 Our email:  
 Shuai Zhang zhangshuai@cqu.edu.cn  
 Zongwei Wang zongwei@cqu.edu.cn  
-Jia Wang jjia@cqu.edu.cn
+Jia Wang jiawang@cqu.edu.cn
 
 # 操作说明
 1. 进入Main  
