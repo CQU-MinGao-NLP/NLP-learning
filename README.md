@@ -3,11 +3,12 @@ This is a NLP project.
 Mentor:   
 [@Min Gao](http://www.cse.cqu.edu.cn/info/2096/3497.htm)  
 Member:   
-[@Shuai Zhang](https://github.com/1102173230);  [@Zongwei Wang](https://github.com/CoderWZW); [@Jia Wang](https://github.com/JJia000);
+ [@Yinqiu Huang](https://github.com/964070525); [@Zongwei Wang](https://github.com/CoderWZW); [@Shuai Zhang](https://github.com/1102173230);  [@Jia Wang](https://github.com/JJia000);
 
 Our email:  
-Shuai Zhang zhangshuai@cqu.edu.cn  
-Zongwei Wang zongwei@cqu.edu.cn  
+Yinqiu Huang yinqiu@cqu.edu.cn
+Zongwei Wang zongwei@cqu.edu.cn
+Shuai Zhang zhangshuai@cqu.edu.cn
 Jia Wang jiawang@cqu.edu.cn
 
 # 操作说明
