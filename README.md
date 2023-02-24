@@ -6,10 +6,10 @@ Member:
  [@Yinqiu Huang](https://github.com/964070525); [@Zongwei Wang](https://github.com/CoderWZW); [@Shuai Zhang](https://github.com/1102173230);  [@Jia Wang](https://github.com/JJia000);
 
 Our email:  
-Yinqiu Huang yinqiu@cqu.edu.cn
-Zongwei Wang zongwei@cqu.edu.cn
-Shuai Zhang zhangshuai@cqu.edu.cn
-Jia Wang jiawang@cqu.edu.cn
+Yinqiu Huang yinqiu@cqu.edu.cn  
+Zongwei Wang zongwei@cqu.edu.cn  
+Shuai Zhang zhangshuai@cqu.edu.cn  
+Jia Wang jiawang@cqu.edu.cn  
 
 # 操作说明
 1. 进入Main  
